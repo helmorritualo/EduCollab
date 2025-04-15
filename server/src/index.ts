@@ -18,6 +18,7 @@ const app = new Hono<{ Variables: JwtVariables }>();
 app.use(logger());
 app.use("/api/*", cors());
 app.use(secureHeaders());
+
 app.use("/api/*", async (c: Context, next: Next) => {
   const path = c.req.path;
 
@@ -31,6 +32,7 @@ app.use("/api/*", async (c: Context, next: Next) => {
     secret: process.env.JWT_SECRET as string,
   })(c, next);
 });
+
 app.onError(errorHandlerMiddleware);
 
 
@@ -38,7 +40,6 @@ app.onError(errorHandlerMiddleware);
 routes.forEach((route) => {
   app.route("/api", route);
 });
-
 
 //* convert process.env.PORT to number
 const port = parseInt(process.env.PORT || "3000", 10);

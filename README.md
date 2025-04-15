@@ -24,9 +24,7 @@ Before setting up the project, ensure you have the following installed:
 ### Cloning the Repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/helmorritualo/EduCollab.git
-
 ```
 
 ## Server Setup
