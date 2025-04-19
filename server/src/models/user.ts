@@ -1,7 +1,7 @@
 import conn from "@/config/database";
 import { User } from "@/types/index";
 
-export const getAllUsers = async () => {
+export const getAllUsers = async (): Promise <User[]> => {
   try {
     const sql = "SELECT * FROM users";
     const [result] = await conn.execute(sql);
@@ -12,7 +12,7 @@ export const getAllUsers = async () => {
   }
 };
 
-export const getUserById = async (id: number) => {
+export const getUserById = async (id: number): Promise<User | null>=> {
   try {
     const sql = "SELECT * FROM users WHERE user_id = ?";
     const [result] = await conn.execute(sql, [id]);
@@ -23,7 +23,7 @@ export const getUserById = async (id: number) => {
   }
 };
 
-export const getUserByUsername = async (username: string) => {
+export const getUserByUsername = async (username: string): Promise<User | null> => {
   try {
     const sql = "SELECT * FROM users WHERE username = ?";
     const [result] = await conn.execute(sql, [username]);
@@ -34,7 +34,7 @@ export const getUserByUsername = async (username: string) => {
   }
 };
 
-export const getUserByEmail = async (email: string) => {
+export const getUserByEmail = async (email: string): Promise<User | null> => {
   try {
     const sql = "SELECT * FROM users WHERE email = ?";
     const [result] = await conn.execute(sql, [email]);
@@ -45,7 +45,7 @@ export const getUserByEmail = async (email: string) => {
   }
 };
 
-export const createUser = async (user: User) => {
+export const createUser = async (user: User): Promise<User[]> => {
   try {
     const sql = "INSERT INTO users (username, password, email, full_name, phone_number, gender, role) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const [result] = await conn.execute(sql, [
@@ -65,7 +65,7 @@ export const createUser = async (user: User) => {
   }
 };
 
-export const updateUser = async (id: number, user: User) => {
+export const updateUser = async (id: number, user: Partial<User>): Promise<User | null> => {
   try {
     const sql = "UPDATE users SET username = ?, email = ?, full_name = ?, phone_number = ?, gender = ?, role = ? WHERE user_id = ?";
     const [result] = await conn.execute(sql, [
@@ -85,7 +85,7 @@ export const updateUser = async (id: number, user: User) => {
   }
 };
 
-export const updatePassword = async (id: number, password: string) => {
+export const updatePassword = async (id: number, password: string): Promise<User | null> => {
   try {
     const sql = "UPDATE users SET password = ? WHERE user_id = ?";
     const [result] = await conn.execute(sql, [password, id]);
@@ -96,7 +96,7 @@ export const updatePassword = async (id: number, password: string) => {
   }
 }
 
-export const deleteUser = async (id: number) => {
+export const deleteUser = async (id: number): Promise<boolean> => {
   try {
     const sql = "DELETE FROM users WHERE user_id =?";
     const [result] = await conn.execute(sql, [id]);

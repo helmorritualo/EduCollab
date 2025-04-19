@@ -4,9 +4,9 @@ import { BadRequestError } from "@/utils/error";
 export const validateRegister = async (c: Context, next: Next) => {
   try {
     const body = await c.req.json();
-    const { username, password, email, full_name, gender, role } = body;
+    const { username, password, email, full_name, phone_number, gender, role } = body;
     
-    if (!username || !password || !email || !full_name || !gender || !role) {
+    if (!username || !password || !email || !full_name || !phone_number || !gender || !role) {
       throw new BadRequestError("All fields are required");
     }
     
