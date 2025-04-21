@@ -1,5 +1,3 @@
-import { jwt } from "hono/jwt";
-
 // * JWT (JSON Web Token) configuration
 export const config = {
   // * Secret key used to sign JWT tokens

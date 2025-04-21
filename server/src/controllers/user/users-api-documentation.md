@@ -8,7 +8,7 @@ This document provides detailed information about the user API endpoints in the 
 
 **Description:** Retrieves a list of all users in the system.
 
-**Endpoint:** `GET /users`
+**Endpoint:** `GET /api/users`
 
 **Controller Function:** `getAllUsers`
 
@@ -50,7 +50,7 @@ This document provides detailed information about the user API endpoints in the 
 
 **Description:** Retrieves a specific user's profile information.
 
-**Endpoint:** `GET /profile/:user_id`
+**Endpoint:** `GET /api/profile/:user_id`
 
 **Controller Function:** `getUserProfile`
 
@@ -82,7 +82,7 @@ This document provides detailed information about the user API endpoints in the 
 
 **Description:** Updates a user's profile information.
 
-**Endpoint:** `PUT /profile/:user_id`
+**Endpoint:** `PUT /api/profile/:user_id`
 
 **Controller Function:** `updateUserProfile`
 
@@ -97,8 +97,7 @@ This document provides detailed information about the user API endpoints in the 
   "email": "john.updated@example.com",
   "full_name": "John Updated Doe",
   "phone_number": "9876543210",
-  "gender": "male",
-  "role": "student"
+  "gender": "male"
 }
 ```
 
@@ -127,7 +126,7 @@ This document provides detailed information about the user API endpoints in the 
 
 **Description:** Updates a user's password.
 
-**Endpoint:** `PUT /user/:user_id/password`
+**Endpoint:** `PUT /api/user/:user_id/password`
 
 **Controller Function:** `updateUserPassword`
 

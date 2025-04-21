@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getGroupMembers, addGroupMember, removeGroupMember } from "./index";
+import { getGroupMembers, addGroupMember, removeGroupMember } from "./groupMember.controller";
 import { authenticate } from "@/middlewares/authentication";
 
 const groupMemberRouter = new Hono()

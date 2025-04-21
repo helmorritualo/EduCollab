@@ -6,7 +6,7 @@ import {
   createGroup,
   updateGroup,
   deleteGroup,
-} from "./index";
+} from "./group.controller";
 import { authenticate } from "@/middlewares/authentication";
 
 const groupRoutes = new Hono()

@@ -67,14 +67,13 @@ export const createUser = async (user: User): Promise<User[]> => {
 
 export const updateUser = async (id: number, user: Partial<User>): Promise<User | null> => {
   try {
-    const sql = "UPDATE users SET username = ?, email = ?, full_name = ?, phone_number = ?, gender = ?, role = ? WHERE user_id = ?";
+    const sql = "UPDATE users SET username = ?, email = ?, full_name = ?, phone_number = ?, gender = ? WHERE user_id = ?";
     const [result] = await conn.execute(sql, [
       user.username,
       user.email,
       user.full_name,
       user.phone_number,
       user.gender,
-      user.role,
       id
     ]);
   

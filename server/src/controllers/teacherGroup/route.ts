@@ -3,7 +3,7 @@ import {
   getGroupTeachers,
   assignTeacherToGroup,
   removeTeacherFromGroup,
-} from "./index";
+} from "./teacherGroup.controller";
 import { authenticate } from "@/middlewares/authentication";
 
 const teacherGroupRouter = new Hono()

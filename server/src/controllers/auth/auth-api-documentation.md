@@ -87,9 +87,9 @@ Password: `eduAdmin2025`
     "email": "string",
     "full_name": "string",
     "gender": "string",
-    "role": "string",
-    "token": "string"
-  }
+    "role": "string"
+  },
+  "token": "string"
 }
 ```
 

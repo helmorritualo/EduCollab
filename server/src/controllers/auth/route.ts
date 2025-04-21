@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { registerHandler, loginHandler, refreshTokenHandler } from "./index";
+import { registerHandler, loginHandler, refreshTokenHandler } from "./auth.controller";
 import { validateLogin, validateRegister } from "@/middlewares/validation";
 import { authenticateForRefreshToken } from "@/middlewares/authentication";
 
