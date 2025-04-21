@@ -18,6 +18,7 @@ const app = new Hono<{ Variables: JwtVariables }>();
 app.use(logger());
 app.use("/api/*", cors());
 app.use(secureHeaders());
+app.onError(errorHandlerMiddleware); //* error handler middleware
 
 app.use("/api/*", async (c: Context, next: Next) => {
   const path = c.req.path;
@@ -32,9 +33,6 @@ app.use("/api/*", async (c: Context, next: Next) => {
     secret: process.env.JWT_SECRET as string,
   })(c, next);
 });
-
-app.onError(errorHandlerMiddleware);
-
 
 //* routes
 routes.forEach((route) => {

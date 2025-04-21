@@ -3,7 +3,7 @@ import {
   getGroupMembersService,
   addGroupMemberService,
   removeGroupMemberService
-} from "@/services/groupMemberServices";
+} from "@/services/groupMember.service";
 
 export const getGroupMembers = async (c: Context) => {
   const groupId = c.req.param("group_id");

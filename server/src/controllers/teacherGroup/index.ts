@@ -3,7 +3,7 @@ import {
   getGroupTeachersService,
   assignTeacherToGroupService,
   removeTeacherFromGroupService
-} from "@/services/teacherGroupServices";
+} from "@/services/teacherGroup.service";
 
 export const getGroupTeachers = async (c: Context) => {
   const groupId = c.req.param("group_id");

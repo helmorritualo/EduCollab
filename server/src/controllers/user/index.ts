@@ -5,7 +5,7 @@ import {
   updateUserService,
   getUserProfileService,
   deleteUserService,
-} from "@/services/userServices";
+} from "@/services/user.service";
 
 export const getAllUsers = async (c: Context) => {
   const users = await getAllUsersService();

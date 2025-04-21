@@ -6,7 +6,7 @@ import {
   createGroupService,
   updateGroupService,
   deleteGroupService,
-} from "@/services/groupServices";
+} from "@/services/group.service";
 
 export const getAllGroups = async (c: Context) => {
   const groups = await getAllGroupsService();

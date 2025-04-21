@@ -1,4 +1,4 @@
-import { register, login, refreshToken } from "@/services/authServices";
+import { register, login, refreshToken } from "@/services/auth.service";
 import { Context } from "hono";
 import { BadRequestError } from "@/utils/error";
 
