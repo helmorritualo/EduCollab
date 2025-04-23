@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
@@ -12,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { profileAPI } from "@/services/api.service";
 import axios from "axios";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
-import { UserData, AuthContextType } from "@/types";
+import { UserData, AuthContextType, User } from "@/types";
 import Swal from "sweetalert2";
 
 interface AuthProviderProps {
@@ -32,9 +31,7 @@ const defaultAuthContextValue: AuthContextType = {
   logout: () => {
     throw new Error("Logout function not implemented in default context");
   },
-  isAdmin: () => {
-    return false;
-  }
+  isAdmin: false,
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContextValue);
@@ -77,36 +74,108 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
         );
 
-        if (response.data.success) {
+        if (response.data && response.data.success) {
           const { token, user } = response.data;
+
+          // Ensure token exists
+          if (!token) {
+            console.error("Token missing from server response");
+            Swal.fire({
+              icon: "error",
+              title: "Error!",
+              text: "Authentication token missing from server response.",
+            });
+            return false;
+          }
+
           setToken(token);
 
-          const profileResponse = await profileAPI.getUserProfile(user.user_id);
-
-          const completeUser = profileResponse.data.user || user;
-          setUserData(completeUser);
-
-          if (completeUser.role === "admin") {
-            navigate("/admin");
-          } else if (completeUser.role === "teacher") {
-            navigate("/teacher");
-          } else {
-            navigate("/student");
+          // Handle case where user data might be missing
+          if (!user) {
+            console.error("User data missing from server response");
+            Swal.fire({
+              icon: "error",
+              title: "Error!",
+              text: "User data missing from server response.",
+            });
+            return false;
           }
-          return true;
+
+          try {
+            const profileResponse = await profileAPI.getUserProfile(
+              user.user_id
+            );
+            const completeUser =
+              profileResponse.data && profileResponse.data.user
+                ? profileResponse.data.user
+                : user;
+
+            setUserData(completeUser);
+
+            if (completeUser.role === "admin") {
+              navigate("/admin");
+            } else if (completeUser.role === "teacher") {
+              navigate("/teacher");
+            } else {
+              navigate("/");
+            }
+            return true;
+          } catch (profileError) {
+            console.error("Error fetching user profile:", profileError);
+            // Still set the basic user data we have
+            setUserData(user);
+
+            if (user.role === "admin") {
+              navigate("/admin");
+            } else if (user.role === "teacher") {
+              navigate("/teacher");
+            } else {
+              navigate("/");
+            }
+            return true;
+          }
+        } else {
+          console.error("Invalid response format:", response.data);
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: response.data?.message || "Login failed. Please try again.",
+          });
+          return false;
         }
-      } catch (error) {
+      } catch (error: Error | unknown) {
+        console.error("Login error:", error);
+
+        // Improved error handling to capture server error messages
+        let errorMessage = "Invalid Username or Password";
+
+        if (axios.isAxiosError(error) && error.response) {
+          
+          if (error.response.data && error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else if (
+            error.response.data &&
+            typeof error.response.data === "string"
+          ) {
+            errorMessage = error.response.data;
+          } else if (error.response.status === 401) {
+            errorMessage = "Invalid username or password";
+          }
+        } else if (error instanceof Error && error.message) {
+          errorMessage = error.message;
+        }
+
         Swal.fire({
           icon: "error",
-          title: "Error!",
-          text:
-            error instanceof Error
-              ? error?.message
-              : "Invalid Username or Password",
+          title: "Login Failed",
+          text: errorMessage,
         });
+
         return false;
       }
-    },[setToken, setUserData, navigate]);
+    },
+    [setToken, setUserData, navigate]
+  );
 
   const register = useCallback(
     async (userData: UserData) => {
@@ -117,6 +186,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         );
 
         if (response.data.success) {
+          Swal.fire({
+            title: "Success!",
+            text: response.data.message,
+            icon: "success",
+          });
+
           navigate("/login");
           return true;
         }
@@ -128,22 +203,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         });
         return false;
       }
-    }, [navigate]);
+    },
+    [navigate]
+  );
 
   const updateProfile = useCallback(
-    async (user_id: number, userData: UserData) => {
+    async (user_id: number, userData: User) => {
       try {
         const response = await profileAPI.updateUserProfile(user_id, userData);
 
         if (response.data.success) {
-          const updatedUser = { ...user, ...userData };
+          const updatedUser = response.data.user
+            ? response.data.user
+            : userData;
           setUserData(updatedUser);
           setUser(updatedUser);
 
           Swal.fire({
             title: "Success!",
             text: response.data.message,
-            icon: "success"
+            icon: "success",
           });
           return true;
         }
@@ -151,11 +230,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         Swal.fire({
           icon: "error",
           title: "Error!",
-          text: error instanceof Error? error?.message : "Failed to update profile",
+          text:
+            error instanceof Error
+              ? error?.message
+              : "Failed to update profile",
         });
         return false;
       }
-    }, [setUserData, setUser, user]);
+    },
+    [setUserData, setUser]
+  );
 
   const logout = useCallback(() => {
     removeToken();
@@ -163,10 +247,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     clearAuthStorage();
     navigate("/login");
   }, [removeToken, removeUserData, clearAuthStorage, navigate]);
-
-  const isAdminValue = useMemo(() => {
-    return user?.role === "admin";
-  }, [user]);
 
   const value = useMemo(
     () => ({
@@ -177,8 +257,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       register,
       updateProfile,
       logout,
-      isAdmin: () => isAdminValue,
-    }), [token, user, isLoading, login, register, updateProfile, logout, isAdminValue]);
+      isAdmin: user?.role === "admin",
+    }),
+    [token, user, isLoading, login, register, updateProfile, logout]
+  );
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -186,6 +268,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

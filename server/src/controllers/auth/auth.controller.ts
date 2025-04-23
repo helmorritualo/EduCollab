@@ -17,7 +17,8 @@ export const registerHandler = async (c: Context) => {
 export const loginHandler = async (c: Context) => {
   const userData = await c.req.json();
 
-  const { userWithoutPassword, token } = await login(userData);
+  const result = await login(userData);
+  const { userWithoutPassword, token} = result;
 
   return c.json({
     success: true,

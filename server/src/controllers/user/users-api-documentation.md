@@ -126,7 +126,7 @@ This document provides detailed information about the user API endpoints in the 
 
 **Description:** Updates a user's password.
 
-**Endpoint:** `PUT /api/user/:user_id/password`
+**Endpoint:** `PUT /api/user/:user_id/change-password`
 
 **Controller Function:** `updateUserPassword`
 

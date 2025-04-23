@@ -19,10 +19,12 @@ export const getAllUsersService = async () => {
     if (!users || users.length === 0) {
       throw new NotFoundError("Users not found");
     }
+
     const usersWithoutPassword = users.map((user) => {
       const { password: _, ...userWithoutPassword } = user || {};
       return userWithoutPassword;
     });
+
     return usersWithoutPassword;
   } catch (error) {
     console.error(`Error fetching users: ${error}`);
@@ -39,7 +41,7 @@ export const getUserProfileService = async (user_id: number) => {
     if (!user) {
       throw new NotFoundError("User not found");
     }
-
+    
     const { password: _, ...userWithoutPassword } = user || {};
 
     return userWithoutPassword;
