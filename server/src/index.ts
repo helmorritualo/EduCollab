@@ -34,6 +34,7 @@ app.use("/api/*", async (c: Context, next: Next) => {
   })(c, next);
 });
 
+
 //* routes
 routes.forEach((route) => {
   app.route("/api", route);

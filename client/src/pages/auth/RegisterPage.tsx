@@ -4,15 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const RegisterPage = () => {
   const { register } = useAuth();
-  const [formData, setFormData] = useState<{
-    username: string;
-    password: string;
-    email: string;
-    full_name: string;
-    phone_number: string;
-    gender: string;
-    role: string;
-  }>({
+  const [formData, setFormData] = useState({
     username: "",
     password: "",
     email: "",
@@ -27,7 +19,7 @@ const RegisterPage = () => {
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  ) => {  
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -319,7 +311,6 @@ const RegisterPage = () => {
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-                <option value="other">Other</option>
               </select>
             </div>
             <div>
