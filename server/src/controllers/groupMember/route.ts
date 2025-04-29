@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { getGroupMembers, addGroupMember, removeGroupMember } from "./groupMember.controller";
+import { joinGroup, getGroupDetails, listUserGroups } from "./groupMember.controller";
 import { authenticate } from "@/middlewares/authentication";
 
-const groupMemberRouter = new Hono()
-.get("/group-member", authenticate, getGroupMembers)
-.post("/group-member/:group_id", authenticate, addGroupMember)
-.delete("/group-member/:group_id/:user_id", authenticate, removeGroupMember);
+const groupMemberRoutes = new Hono()
+  .post("/groups/join", authenticate, joinGroup)
+  .get("/user/groups", authenticate, listUserGroups)
+  .get("/groups/:group_id", authenticate, getGroupDetails);
 
-export default groupMemberRouter;
+export default groupMemberRoutes;

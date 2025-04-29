@@ -1,42 +1,113 @@
 import { Context } from "hono";
 import {
-  getGroupMembersService,
-  addGroupMemberService,
-  removeGroupMemberService
+  joinGroupService,
+  getGroupDetailsService,
+  listUserGroupsService,
 } from "@/services/groupMember.service";
+import { NotFoundError, BadRequestError } from "@/utils/error";
 
-export const getGroupMembers = async (c: Context) => {
-  const groupId = c.req.param("group_id");
-  
-  const members = await getGroupMembersService(Number(groupId));
-  
-  return c.json({
-    success: true,
-    message: "Group members retrieved successfully",
-    members
-  }, 200);
+export const joinGroup = async (c: Context) => {
+  try {
+    const { group_code } = await c.req.json();
+    const user_id = c.get("user_id");
+
+    await joinGroupService(user_id, group_code);
+
+    return c.json(
+      {
+        success: true,
+        message: "Joined successfully",
+      },
+      200
+    );
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        404
+      );
+    }
+    if (error instanceof BadRequestError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        400
+      );
+    }
+    return c.json(
+      {
+        success: false,
+        message: "Failed to join group",
+      },
+      500
+    );
+  }
 };
 
-export const addGroupMember = async (c: Context) => {
-  const groupId = c.req.param("group_id");
-  const { userId } = await c.req.json();
-  
-  await addGroupMemberService(Number(groupId), Number(userId));
-  
-  return c.json({
-    success: true,
-    message: "Member added to group successfully"
-  }, 201);
+export const getGroupDetails = async (c: Context) => {
+  try {
+    const group_id = c.req.param("group_id");
+
+    const group = await getGroupDetailsService(Number(group_id));
+
+    return c.json({
+      success: true,
+      message: "Group details retrieved successfully",
+      group,
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        404
+      );
+    }
+    return c.json(
+      {
+        success: false,
+        message: "Failed to retrieve group details",
+      },
+      500
+    );
+  }
 };
 
-export const removeGroupMember = async (c: Context) => {
-  const groupId = c.req.param("group_id");
-  const userId = c.req.param("user_id");
-  
-  await removeGroupMemberService(Number(groupId), Number(userId));
-  
-  return c.json({
-    success: true,
-    message: "Member removed from group successfully"
-  }, 200);
+export const listUserGroups = async (c: Context) => {
+  try {
+    const user_id = c.get("user_id");
+
+    const groups = await listUserGroupsService(user_id);
+
+    return c.json({
+      success: true,
+      message: "Groups retrieved successfully",
+      groups,
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+          groups: [],
+        },
+        200
+      );
+    }
+    return c.json(
+      {
+        success: false,
+        message: "Failed to retrieve groups",
+      },
+      500
+    );
+  }
 };

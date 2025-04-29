@@ -1,10 +1,11 @@
 import conn from "@/config/database";
 import { Group, GroupWithCreator } from "@/types";
+import { generateGroupCode } from "@/helpers/generateGroupCode";
 
 export const getAllGroups = async (): Promise<GroupWithCreator[]> => {
   try {
     const sql = `
-      SELECT g.*, u.username, u.full_name, u.email 
+      SELECT g.group_id g.name, g.description, g.group_code, u.full_name AS creator_name
       FROM groups g
       JOIN users u ON g.created_by = u.user_id
     `;
@@ -16,10 +17,12 @@ export const getAllGroups = async (): Promise<GroupWithCreator[]> => {
   }
 };
 
-export const getGroupById = async (id: number): Promise<GroupWithCreator | null> => {
+export const getGroupById = async (
+  id: number
+): Promise<GroupWithCreator | null> => {
   try {
     const sql = `
-      SELECT g.*, u.username, u.full_name, u.email 
+      SELECT g.*, u.full_name AS creator_name
       FROM groups g
       JOIN users u ON g.created_by = u.user_id
       WHERE g.group_id = ?
@@ -32,18 +35,30 @@ export const getGroupById = async (id: number): Promise<GroupWithCreator | null>
   }
 };
 
-export const createGroup = async (group: Group): Promise<GroupWithCreator | null> => {
+export const createGroup = async (
+  group: Group
+): Promise<GroupWithCreator> => {
   try {
+
+    const group_code = generateGroupCode();
+
+    // Check if group_code already exists
+    const checkSql = "SELECT * FROM groups WHERE group_code =?";
+    const [checkResult] = await conn.execute(checkSql, [group_code]);
+    if ((checkResult as Group[]).length > 0) {
+      throw new Error("Group code already exists");
+    }
+
     const sql =
-      "INSERT INTO groups (name, description, created_by) VALUES (?,?,?)";
+      "INSERT INTO groups (name, description, created_by, group_code) VALUES (?, ?, ?, ?)";
     const [result] = await conn.execute(sql, [
       group.name,
       group.description,
       group.created_by,
+      group_code,
     ]);
 
-    const insertId = (result as { insertId: number }).insertId;
-    return await getGroupById(insertId);
+    return (result as any).insertId;
   } catch (error) {
     console.error(`Error creating group: ${error}`);
     throw error;
@@ -51,7 +66,7 @@ export const createGroup = async (group: Group): Promise<GroupWithCreator | null
 };
 
 export const updateGroup = async (
-  groupId: number, 
+  groupId: number,
   groupData: Partial<Group>
 ): Promise<GroupWithCreator | null> => {
   try {
@@ -69,8 +84,6 @@ export const updateGroup = async (
       values.push(groupData.description);
     }
 
-    //! Don't allow updating created_by or created_at fields
-    
     // If no fields to update, return the current group
     if (updateFields.length === 0) {
       return await getGroupById(groupId);
@@ -79,7 +92,9 @@ export const updateGroup = async (
     // Add the group ID to the values array
     values.push(groupId);
 
-    const sql = `UPDATE groups SET ${updateFields.join(", ")} WHERE group_id = ?`;
+    const sql = `UPDATE groups SET ${updateFields.join(
+      ", "
+    )} WHERE group_id = ?`;
     await conn.execute(sql, values);
 
     // Return the updated group
@@ -92,74 +107,13 @@ export const updateGroup = async (
 
 export const deleteGroup = async (groupId: number): Promise<boolean> => {
   try {
-    // Start a transaction to ensure all operations succeed or fail together
-    await conn.beginTransaction();
-    
-    try {
-      // First delete related records in teacher_groups
-      await conn.execute("DELETE FROM teacher_groups WHERE group_id = ?", [groupId]);
-      
-      // Then delete related records in group_members
-      await conn.execute("DELETE FROM group_members WHERE group_id = ?", [groupId]);
-      
-      // Delete related records in files
-      await conn.execute("DELETE FROM files WHERE group_id = ?", [groupId]);
-      
-      // Delete related records in tasks
-      await conn.execute("DELETE FROM tasks WHERE group_id = ?", [groupId]);
-      
-      // Delete related records in feedbacks
-      await conn.execute("DELETE FROM feedbacks WHERE group_id = ?", [groupId]);
-      
-      // Finally delete the group itself
-      const [result] = await conn.execute("DELETE FROM groups WHERE group_id = ?", [groupId]);
-      
-      // Commit the transaction
-      await conn.commit();
-      
-      return (result as { affectedRows: number }).affectedRows > 0;
-    } catch (error) {
-      // If any error occurs, roll back the transaction
-      await conn.rollback();
-      throw error;
-    }
+    const sql = `DELETE FROM groups WHERE group_id =?`;
+    const [result] = await conn.execute(sql, [groupId]);
+    return (result as { affectedRows: number }).affectedRows > 0;
   } catch (error) {
     console.error(`Error deleting group: ${error}`);
     throw error;
   }
 };
 
-export const getGroupsByUser = async (userId: number): Promise<GroupWithCreator[]> => {
-  try {
-    const sql = `
-      SELECT g.*, u.username, u.full_name, u.email 
-      FROM groups g
-      JOIN users u ON g.created_by = u.user_id
-      JOIN group_members gm ON g.group_id = gm.group_id
-      WHERE gm.user_id = ?
-    `;
-    const [result] = await conn.execute(sql, [userId]);
-    return result as GroupWithCreator[];
-  } catch (error) {
-    console.error(`Error fetching user's groups: ${error}`);
-    throw error;
-  }
-};
-
-export const getGroupsByTeacher = async (teacherId: number): Promise<GroupWithCreator[]> => {
-  try {
-    const sql = `
-      SELECT g.*, u.username, u.full_name, u.email 
-      FROM groups g
-      JOIN users u ON g.created_by = u.user_id
-      JOIN teacher_groups tg ON g.group_id = tg.group_id
-      WHERE tg.teacher_id = ?
-    `;
-    const [result] = await conn.execute(sql, [teacherId]);
-    return result as GroupWithCreator[];
-  } catch (error) {
-    console.error(`Error fetching teacher's groups: ${error}`);
-    throw error;
-  }
-};
 

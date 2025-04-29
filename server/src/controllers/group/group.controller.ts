@@ -2,133 +2,182 @@ import { Context } from "hono";
 import {
   getAllGroupsService,
   getGroupByIdService,
-  getGroupsByUserService,
   createGroupService,
   updateGroupService,
   deleteGroupService,
 } from "@/services/group.service";
+import { NotFoundError, BadRequestError } from "@/utils/error";
 
 export const getAllGroups = async (c: Context) => {
-  const groups = await getAllGroupsService();
-
-  return c.json(
-    {
-      success: true,
-      message: "Groups retrieved successfully",
-      groups,
-    },
-    200
-  );
+  try {
+    const groups = await getAllGroupsService();
+    
+    return c.json(
+      {
+        success: true,
+        message: "Groups retrieved successfully",
+        groups,
+      },
+      200
+    );
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+          groups: [],
+        },
+        200
+      );
+    }
+    return c.json(
+      {
+        success: false,
+        message: "Failed to retrieve groups",
+      },
+      500
+    );
+  }
 };
 
 export const getGroupById = async (c: Context) => {
-  const groupId = c.req.param("group_id");
+  try {
+    const groupId = c.req.param("group_id");
+    const group = await getGroupByIdService(Number(groupId));
 
-  const group = await getGroupByIdService(Number(groupId));
-
-  if (!group) {
+    return c.json(
+      {
+        success: true,
+        message: "Group retrieved successfully",
+        group,
+      },
+      200
+    );
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        404
+      );
+    }
     return c.json(
       {
         success: false,
-        message: "Group not found",
+        message: "Failed to retrieve group",
       },
-      404
+      500
     );
   }
-
-  return c.json(
-    {
-      success: true,
-      message: "Group retrieved successfully",
-      group,
-    },
-    200
-  );
-};
-
-export const getGroupsByUser = async (c: Context) => {
-  const userId = c.req.param("user_id");
-
-  const groups = await getGroupsByUserService(Number(userId));
-
-  if (!groups || groups.length === 0) {
-    return c.json(
-      {
-        success: false,
-        message: "No groups found",
-      },
-      404
-    );
-  }
-
-  return c.json({
-    success: true,
-    message: "Groups retrieved successfully",
-    groups,
-  });
 };
 
 export const createGroup = async (c: Context) => {
-  const group = await c.req.json();
+  try {
+    const group = await c.req.json();
+    const user_id = c.get("user_id");
+    const groupWithCreator = { ...group, created_by: user_id };
+    const newGroup = await createGroupService(groupWithCreator);
 
-  const newGroup = await createGroupService(group);
-
-  return c.json(
-    {
-      success: true,
-      message: "Group created successfully",
-      group: newGroup,
-    },
-    201
-  );
+    return c.json(
+      {
+        success: true,
+        message: "Group created successfully",
+        group: newGroup,
+      },
+      201
+    );
+  } catch (error) {
+    if (error instanceof BadRequestError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        400
+      );
+    }
+    return c.json(
+      {
+        success: false,
+        message: "Failed to create group",
+      },
+      500
+    );
+  }
 };
 
 export const updateGroup = async (c: Context) => {
-  const groupId = c.req.param("group_id");
-  const groupData = await c.req.json();
-
-  const updatedGroup = await updateGroupService(Number(groupId), groupData);
-
-  if (!updatedGroup) {
+  try {
+    const groupId = c.req.param("group_id");
+    const groupData = await c.req.json();
+    const updatedGroup = await updateGroupService(Number(groupId), groupData);
+    return c.json(
+      {
+        success: true,
+        message: "Group updated successfully",
+        group: updatedGroup,
+      },
+      201
+    );
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        404
+      );
+    }
+    if (error instanceof BadRequestError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        400
+      );
+    }
     return c.json(
       {
         success: false,
-        message: "Group not found",
+        message: "Failed to update group",
       },
-      404
+      500
     );
   }
-
-  return c.json(
-    {
-      success: true,
-      message: "Group updated successfully",
-      group: updatedGroup,
-    },
-    201  
-  ) 
 };
 
 export const deleteGroup = async (c: Context) => {
-  const groupId = c.req.param("group_id");
-
-  const deletedGroup = await deleteGroupService(Number(groupId));
-
-  if (!deletedGroup) {
+  try {
+    const groupId = c.req.param("group_id");
+    await deleteGroupService(Number(groupId));
+    return c.json(
+      {
+        success: true,
+        message: "Group deleted successfully",
+      },
+      200
+    );
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        404
+      );
+    }
     return c.json(
       {
         success: false,
-        message: "Group not found",
+        message: "Failed to delete group",
       },
-      404
+      500
     );
-  } 
-
-  return c.json(
-    {
-      success: true,
-      message: "Group deleted successfully",
-    }, 
-    200
-  )
-}
+  }
+};

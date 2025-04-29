@@ -1,60 +1,61 @@
-import {
-  getGroupMembers,
-  addGroupMember,
-  removeGroupMember,
-  isGroupMember,
-} from "@/models/groupMember";
-import { getGroupById } from "@/models/group";
-import { getUserById } from "@/models/user";
-import { User } from "@/types";
 import { NotFoundError, BadRequestError } from "@/utils/error";
+import { joinGroup, getGroupDetails, listUserGroups } from "@/models/groupMember";
 
-export const getGroupMembersService = async (
-  groupId: number
-): Promise<User[]> => {
-  const group = await getGroupById(groupId);
-  if (!group) {
-    throw new NotFoundError("Group not found");
+export const joinGroupService = async (
+  user_id: number,
+  group_code: string   
+) =>  {
+  try {
+    const group = await getGroupDetails(parseInt(group_code));
+    if (!group) {
+      throw new NotFoundError("Group not found");
+    }
+    const isJoined = await joinGroup(user_id, group_code);
+    if (!isJoined) {
+      throw new BadRequestError("Failed to join group");
+    }
+    return {
+      group_id: group.group_id,
+      group_code: group.group_code,
+    }
+  } catch (error) {
+    if (error instanceof NotFoundError || error instanceof BadRequestError) {
+      throw error;
+    }
+    throw new Error("Failed to join group");
   }
-
-  return await getGroupMembers(groupId);
 };
 
-export const addGroupMemberService = async (
-  groupId: number,
-  userId: number
-): Promise<boolean> => {
-  const group = await getGroupById(groupId);
-  if (!group) {
-    throw new NotFoundError("Group not found");
-  }
-
-  const user = await getUserById(userId);
-  if (!user) {
-    throw new NotFoundError("User not found");
-  }
-
-  const isMember = await isGroupMember(groupId, userId);
-  if (isMember) {
-    throw new BadRequestError("User is already a member of this group");
-  }
-
-  return await addGroupMember(groupId, userId);
+export const getGroupDetailsService = async (
+  group_id: number
+) => {
+  try {
+    const group = await getGroupDetails(group_id);
+    if (!group) {
+      throw new NotFoundError("Group not found");
+    }
+    return group;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new Error("Failed to get group details");
+  } 
 };
 
-export const removeGroupMemberService = async (
-  groupId: number,
-  userId: number
-): Promise<boolean> => {
-  const group = await getGroupById(groupId);
-  if (!group) {
-    throw new NotFoundError("Group not found");
+export const listUserGroupsService = async (
+  user_id: number
+) => {
+  try {
+    const groups = await listUserGroups(user_id);
+    if (!groups) {
+      throw new NotFoundError("Groups not found");
+    }
+    return groups;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new Error("Failed to list user groups");
   }
-
-  const isMember = await isGroupMember(groupId, userId);
-  if (!isMember) {
-    throw new NotFoundError("User is not a member of this group");
-  }
-
-  return await removeGroupMember(groupId, userId);
 };
