@@ -37,13 +37,13 @@ export const getUserProfile = async (c: Context) => {
 export const updateUserProfile = async (c: Context) => {
   const user_id = c.get("user_id");
   const userData = await c.req.json();
-  const user = await updateUserService(Number(user_id), userData);
+  const updatedUser = await updateUserService(Number(user_id), userData);
 
   return c.json(
     {
       success: true,
       message: "Update profile successfully",
-      user,
+      updatedUser
     },
     201
   );

@@ -53,11 +53,15 @@ api.interceptors.response.use(
         const token = localStorage.getItem("token");
         if (token) {
           // Call refresh token endpoint
-          const refreshResponse = await api.post("/api/refresh-token", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const refreshResponse = await api.post(
+            "/api/refresh-token",
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
           const newToken = refreshResponse.data.token;
           if (newToken) {
@@ -97,28 +101,28 @@ api.interceptors.response.use(
 );
 
 export const profileAPI = {
-    getUserProfile: async (id: number) => {
-        const response = await api.get(`/api/profile/${id}`);
+    getUserProfile: async () => {
+        const response = await api.get(`/api/profile`);
         return response.data;
     },
-    updateUserProfile: async (id: number, data: {
+    updateUserProfile: async (data: {
         username?: string;
         email?: string;
         full_name?: string;
         phone_number?: string;
         gender?: string;
     }) => {
-        const response = await api.put(`/api/profile/${id}`, data);
+        const response = await api.put(`/api/profile`, data);
         return response.data;
     }
 };
 
 export const userAPI = {
-    changePassword: async (id: number, data: {
+    changePassword: async (data: {
         oldPassword: string;
         newPassword: string;
     }) => {
-        const response = await api.put(`/api/user/${id}/change-password`, data);
+        const response = await api.put(`/api/user/change-password`, data);
         return response.data;
     },
     getAllUsers: async () => {

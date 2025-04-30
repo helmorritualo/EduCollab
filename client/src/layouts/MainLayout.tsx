@@ -10,7 +10,6 @@ import {
   X,
   LayoutDashboard,
   ClipboardList,
-  CircleUserRound,
   Users,
   Ellipsis,
   Files
@@ -28,14 +27,12 @@ const MainLayout = () => {
     { name: "Tasks", href: "/tasks", icon: ClipboardList },
     { name: "Progress", href: "/progress", icon: Ellipsis },
     { name: "Groups", href: "/groups", icon: Users },
-    { name: "Profile", href: "/profile", icon: CircleUserRound },
   ];
 
   const teacherNavigation = [
     { name: "Dashboard", href: "/teacher", icon: LayoutDashboard },
     { name: "Tasks", href: "/teacher/tasks", icon: ClipboardList },
     { name: "Groups", href: "/teacher/groups", icon: Users },
-    { name: "Profile", href: "/teacher/profile", icon: CircleUserRound },
   ];
 
   const adminNavigation = [
@@ -44,7 +41,6 @@ const MainLayout = () => {
     { name: "Files", href: "/admin/files", icon: Files },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Groups", href: "/admin/groups", icon: Users },
-    { name: "Profile", href: "/admin/profile", icon: CircleUserRound },
   ];
 
   const isActive = (path: string) => location.pathname === path;

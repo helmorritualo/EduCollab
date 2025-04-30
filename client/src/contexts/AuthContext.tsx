@@ -32,6 +32,11 @@ const defaultAuthContextValue: AuthContextType = {
     throw new Error("Logout function not implemented in default context");
   },
   isAdmin: false,
+  updateProfile: async () => {
+    throw new Error(
+      "UpdateProfile function not implemented in default context"
+    );
+  },
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContextValue);
@@ -52,12 +57,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (token && userData) {
-        setUser(userData);
-      } else {
+      try {
+        if (token && userData) {
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
         setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchUserData();
@@ -102,9 +113,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
 
           try {
-            const profileResponse = await profileAPI.getUserProfile(
-              user.user_id
-            );
+            const profileResponse = await profileAPI.getUserProfile();
             const completeUser =
               profileResponse.data && profileResponse.data.user
                 ? profileResponse.data.user
@@ -150,7 +159,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         let errorMessage = "Invalid Username or Password";
 
         if (axios.isAxiosError(error) && error.response) {
-          
           if (error.response.data && error.response.data.message) {
             errorMessage = error.response.data.message;
           } else if (
@@ -208,23 +216,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   );
 
   const updateProfile = useCallback(
-    async (user_id: number, userData: User) => {
+    async (userData: User) => {
       try {
-        const response = await profileAPI.updateUserProfile(user_id, userData);
+        const response = await profileAPI.updateUserProfile(userData);
 
-        if (response.data.success) {
-          const updatedUser = response.data.user
-            ? response.data.user
-            : userData;
+        if (response.success) {
+          // Always fetch the latest user profile from backend after update
+          let updatedUser = response.user;
+          if (!updatedUser || !updatedUser.role) {
+            // Fallback: fetch user profile to ensure all fields are present
+            const profileResponse = await profileAPI.getUserProfile();
+            updatedUser =
+              profileResponse.data && profileResponse.data.user
+                ? profileResponse.data.user
+                : userData;
+          }
           setUserData(updatedUser);
           setUser(updatedUser);
 
           Swal.fire({
             title: "Success!",
-            text: response.data.message,
+            text: response.message,
             icon: "success",
           });
           return true;
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: response?.data?.message || "Failed to update profile",
+          });
+          return false;
         }
       } catch (error) {
         Swal.fire({

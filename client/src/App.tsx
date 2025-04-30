@@ -67,19 +67,18 @@ function App() {
 
               {/* Protected Routes */}
               <Route path="/" element={<MainLayout />}>
+                <Route path="profile" element={<Profile />} />
 
                 {/* Student Routes */}
                 <Route index element={<StudentDashboard />} />
                 <Route path="tasks" element={<StudentTasks />} />
                 <Route path="progress" element={<StudentProgress />} />
                 <Route path="groups" element={<StudentGroups />} />
-                <Route path="profile" element={<Profile />} />
 
                 <Route path="teacher">
                   <Route index element={<TeacherDashboard />} />
                   <Route path="tasks" element={<TeacherTasks />} />
                   <Route path="groups" element={<TeacherGroups />} />
-                  <Route path="profile" element={<Profile />} />
                 </Route>
 
                 <Route path="admin">
@@ -88,7 +87,6 @@ function App() {
                   <Route path="files" element={<AdminFiles />} />
                   <Route path="users" element={<AdminUsers />} />
                   <Route path="groups" element={<AdminGroups />} />
-                  <Route path="profile" element={<Profile />} />
                 </Route>
               </Route>
 

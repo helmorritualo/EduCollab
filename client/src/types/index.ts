@@ -4,7 +4,8 @@ export type UserData = {
   full_name: string;
   phone_number: string;
   gender: string;
-  role: string;
+  address?: string;
+  role?: string;
 };
 
 export type User = UserData & Partial<{
@@ -18,5 +19,6 @@ export type AuthContextType = {
   login: (username: string, password: string) => Promise<boolean | undefined>;
   logout: () => void;
   register: (userData: UserData) => Promise<boolean | undefined>;
+  updateProfile: (userData: User) => Promise<boolean | undefined>;
   isAdmin: boolean;
 };

@@ -20,7 +20,7 @@ CREATE INDEX idx_users_full_name ON users(full_name);
 
 -- default admin account
 INSERT INTO users (username, password, email, full_name, phone_number, gender, role)
-VALUES ('admin_educollab2025', '$2b$12$dcXRmebh/DqLh4plrwB7juJQDjVTzbCpTFvi2/mMJzAEGWaxv3g32', 'eduCollabgmail.com', 'System Administrator', '09922031958', 'male', 'admin');
+VALUES ('admin_educollab2025', '$2b$12$dcXRmebh/DqLh4plrwB7juJQDjVTzbCpTFvi2/mMJzAEGWaxv3g32', 'eduCollab@gmail.com', 'System Administrator', '09922031958', 'male', 'admin');
 
 CREATE TABLE groups (
     group_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,7 +67,7 @@ CREATE TABLE teacher_group_invitations (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (invited_by) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
-    FOREIGN KEY (invited_teacher_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (invited_teacher_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- indexes for teacher_group_invitations table
