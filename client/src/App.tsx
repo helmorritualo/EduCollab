@@ -40,6 +40,7 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminTasks = lazy(() => import("./pages/admin/AdminTasks"));
 const AdminGroups = lazy(() => import("./pages/admin/AdminGroups"));
 const AdminFiles = lazy(() => import("./pages/admin/AdminFiles"));
+const PrivateRoute = lazy(() => import("./components/PrivateRoute"));
 
 
 const queryClient = new QueryClient({
@@ -65,28 +66,30 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
-              {/* Protected Routes */}
-              <Route path="/" element={<MainLayout />}>
-                <Route path="profile" element={<Profile />} />
+              {/* Private Routes */}
+              <Route element={<PrivateRoute />}>
+                <Route path="/" element={<MainLayout />}>
+                  <Route path="profile" element={<Profile />} />
 
-                {/* Student Routes */}
-                <Route index element={<StudentDashboard />} />
-                <Route path="tasks" element={<StudentTasks />} />
-                <Route path="progress" element={<StudentProgress />} />
-                <Route path="groups" element={<StudentGroups />} />
+                  {/* Student Routes */}
+                  <Route index element={<StudentDashboard />} />
+                  <Route path="tasks" element={<StudentTasks />} />
+                  <Route path="progress" element={<StudentProgress />} />
+                  <Route path="groups" element={<StudentGroups />} />
 
-                <Route path="teacher">
-                  <Route index element={<TeacherDashboard />} />
-                  <Route path="tasks" element={<TeacherTasks />} />
-                  <Route path="groups" element={<TeacherGroups />} />
-                </Route>
+                  <Route path="teacher">
+                    <Route index element={<TeacherDashboard />} />
+                    <Route path="tasks" element={<TeacherTasks />} />
+                    <Route path="groups" element={<TeacherGroups />} />
+                  </Route>
 
-                <Route path="admin">
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="tasks" element={<AdminTasks />} />
-                  <Route path="files" element={<AdminFiles />} />
-                  <Route path="users" element={<AdminUsers />} />
-                  <Route path="groups" element={<AdminGroups />} />
+                  <Route path="admin">
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="tasks" element={<AdminTasks />} />
+                    <Route path="files" element={<AdminFiles />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="groups" element={<AdminGroups />} />
+                  </Route>
                 </Route>
               </Route>
 

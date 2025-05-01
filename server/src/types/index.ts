@@ -7,6 +7,7 @@ export type User = {
   phone_number: string;
   gender: string;
   role: string;
+  is_active: boolean;
 };
 
 export type Group = {

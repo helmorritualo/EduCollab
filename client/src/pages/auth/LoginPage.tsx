@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 
@@ -11,7 +11,6 @@ const LoginPage = () => {
     username: "",
     password: "",
   });
-  const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
@@ -29,38 +28,22 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     try {
       // Add a check to ensure username and password are not empty
       if (!formData.username || !formData.password) {
-        setError("Username and password are required");
         setIsLoading(false);
         return;
       }
       
-      const success = await login(formData.username, formData.password);
-      if (!success) {
-        setError("Invalid username or password");
-      }
+     await login(formData.username, formData.password);
     } catch (err) {
       console.error("Login error:", err);
-      setError(
-        (err as Error).message ||
-          (err as { response?: { data?: { error?: string } } }).response?.data
-            ?.error ||
-          "An error occurred during login. Please try again."
-      );
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Clear error message when form data changes
-  useEffect(() => {
-    if (error) setError("");
-  }, [formData, error]);
 
   return (
     <div className="min-h-screen flex overflow-hidden">
@@ -224,9 +207,6 @@ const LoginPage = () => {
                 </button>
               </div>
             </div>
-            {error && (
-              <div className="text-red-600 text-sm text-center">{error}</div>
-            )}
             <button
               type="submit"
               disabled={isLoading}

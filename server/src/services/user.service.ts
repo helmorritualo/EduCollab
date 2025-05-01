@@ -1,6 +1,7 @@
 import {
   updateUser,
-  deleteUser,
+  deactivateUser,
+  activateUser,
   getUserById,
   updatePassword,
   getAllUsers,
@@ -117,21 +118,49 @@ export const updateUserPasswordService = async (
   }
 };
 
-export const deleteUserService = async (user_id: number) => {
+export const deactivateUserService = async (user_id: number) => {
   try {
     const existingUser = await getUserById(user_id);
     if (!existingUser) {
       throw new NotFoundError("User not found");
     }
 
-    const result = await deleteUser(user_id);
-    if (!result) {
-      throw new BadRequestError("Failed to delete user");
+    const deactivated = await deactivateUser(user_id);
+    if (!deactivated) {
+      throw new BadRequestError("Failed to deactivate user");
     }
 
-    return true;
+    const user = await getUserById(user_id);
+    const { password: _, ...userWithoutPassword } = user || {};
+
+    return userWithoutPassword;
   } catch (error) {
-    console.error(`Error deleting user: ${error}`);
+    console.error(`Error deactivating user: ${error}`);
+    if (error instanceof NotFoundError || error instanceof BadRequestError) {
+      throw error;
+    }
+    throw new InternalServerError("Internal server error");
+  }
+};
+
+export const activateUserService = async (user_id: number) => {
+  try {
+    const existingUser = await getUserById(user_id);
+    if (!existingUser) {
+      throw new NotFoundError("User not found");
+    }
+
+    const activated = await activateUser(user_id);
+    if (!activated) {
+      throw new BadRequestError("Failed to activate user");
+    }
+
+    const user = await getUserById(user_id);
+    const { password: _, ...userWithoutPassword } = user || {};
+    
+    return userWithoutPassword;
+  } catch (error) {
+    console.error(`Error activating user: ${error}`);
     if (error instanceof NotFoundError || error instanceof BadRequestError) {
       throw error;
     }

@@ -10,7 +10,8 @@ CREATE TABLE users (
     full_name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(20) UNIQUE NOT NULL,
     gender ENUM('male', 'female') NOT NULL,
-    role ENUM('admin', 'student', 'teacher') NOT NULL
+    role ENUM('admin', 'student', 'teacher') NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL
 );
 
 -- indexes for users table

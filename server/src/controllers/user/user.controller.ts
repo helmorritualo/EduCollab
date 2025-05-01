@@ -4,7 +4,8 @@ import {
   updateUserPasswordService,
   updateUserService,
   getUserProfileService,
-  deleteUserService,
+  deactivateUserService,
+  activateUserService,
 } from "@/services/user.service";
 
 export const getAllUsers = async (c: Context) => {
@@ -64,15 +65,24 @@ export const updateUserPassword = async (c: Context) => {
   );
 };
 
-export const deleteUser = async (c: Context) => {
+export const deactivateUser = async (c: Context) => {
   const user_id = c.req.param("user_id");
-  await deleteUserService(Number(user_id));
 
-  return c.json(
-    {
+  await deactivateUserService(Number(user_id));
+
+  return c.json({
       success: true,
-      message: "Delete user successfully",
-    },
-    200
-  );
+      message: "Deactivate user successfully",
+    }, 201);
+};
+
+export const activateUser = async (c: Context) => {
+  const user_id = c.req.param("user_id");
+
+  await activateUserService(Number(user_id));
+
+  return c.json({
+      success: true,
+      message: "Activate user successfully",
+    }, 201);
 };

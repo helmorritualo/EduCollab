@@ -153,13 +153,13 @@ This document provides detailed information about the user API endpoints in the 
 
 ---
 
-### 5. Delete User
+### 5. Deactivate User
 
 **Description:** Deletes a user from the system.
 
-**Endpoint:** `DELETE /user/:user_id`
+**Endpoint:** `PUT /user/deactivate/:user_id`
 
-**Controller Function:** `deleteUser`
+**Controller Function:** `deactivateUser`
 
 **Parameters:**
 - `user_id` (URL parameter): The ID of the user to delete
@@ -168,11 +168,32 @@ This document provides detailed information about the user API endpoints in the 
 ```json
 {
   "success": true,
-  "message": "Delete user successfully"
+  "message": "Deactivate user successfully"
 }
 ```
 
-**Status Code:** 200 OK
+**Status Code:** 201 Created
+
+### 6. Activate User
+
+**Description:** Deletes a user from the system.
+
+**Endpoint:** `PUT /user/activate/:user_id`
+
+**Controller Function:** `activateUser`
+
+**Parameters:**
+- `user_id` (URL parameter): The ID of the user to delete
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Activate user successfully"
+}
+```
+
+**Status Code:** 201 Created
 
 ## Error Handling
 

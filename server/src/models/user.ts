@@ -95,13 +95,24 @@ export const updatePassword = async (id: number, password: string): Promise<User
   }
 }
 
-export const deleteUser = async (id: number): Promise<boolean> => {
+export const deactivateUser = async (id: number): Promise<boolean> => {
   try {
-    const sql = "DELETE FROM users WHERE user_id =?";
+    const sql = "UPDATE users SET is_active = 0 WHERE user_id = ?";
     const [result] = await conn.execute(sql, [id]);
-    return (result as any).affectedRows;
+    return (result as any).affectedRows > 0;
   } catch (error) {
-    console.error(`Error deleting user: ${error}`);
+    console.error(`Error deactivating user: ${error}`);
+    throw error;
+  }
+};
+
+export const activateUser = async (id: number): Promise<boolean> => {
+  try {
+    const sql = "UPDATE users SET is_active = 1 WHERE user_id = ?";
+    const [result] = await conn.execute(sql, [id]);
+    return (result as any).affectedRows > 0;
+  } catch (error) {
+    console.error(`Error activating user: ${error}`);
     throw error;
   }
 };

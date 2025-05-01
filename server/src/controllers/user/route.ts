@@ -5,7 +5,8 @@ import {
   getUserProfile,
   updateUserPassword,
   updateUserProfile,
-  deleteUser,
+  activateUser,
+  deactivateUser,
 } from "./user.controller";
 
 const userRoutes = new Hono()
@@ -13,6 +14,7 @@ const userRoutes = new Hono()
   .get("/profile", authenticate, getUserProfile)
   .put("/profile", authenticate, updateUserProfile)
   .put("/user/change-password", authenticate, updateUserPassword)
-  .delete("/user/:user_id", authenticate, requireAdmin, deleteUser);
+  .put("/user/activate/:user_id", authenticate, requireAdmin, activateUser)
+  .put("/user/deactivate/:user_id", authenticate, requireAdmin, deactivateUser);
 
 export default userRoutes;

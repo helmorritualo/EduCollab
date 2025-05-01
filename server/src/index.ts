@@ -16,7 +16,13 @@ const app = new Hono<{ Variables: JwtVariables }>();
 
 //* middlewares
 app.use(logger());
-app.use("/api/*", cors());
+app.use("*", cors({
+  origin: ["http://localhost:5173"],
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowHeaders: ["Content-Type", "Authorization"],
+  exposeHeaders: ["Content-Length", "X-Kuma-Revision"],
+  credentials: true
+}));
 app.use(secureHeaders());
 app.onError(errorHandlerMiddleware); //* error handler middleware
 

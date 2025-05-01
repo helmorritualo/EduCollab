@@ -20,7 +20,7 @@ export const createTeacherGroupInvitation = async (c: Context) => {
     {
       success: true,
       message: "Invitation created successfully",
-      invitation_id: invitation,
+      invitation: invitation
     },
     201
   );

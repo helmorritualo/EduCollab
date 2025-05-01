@@ -65,15 +65,24 @@ export const login = async (credentials: {
   try {
     const { username, password } = credentials;
 
+    // check if username or password is empty
+    if (!username || !password) {
+      throw new BadRequestError("Username or password is empty");
+    }
+
     const user = await getUserByUsername(username);
     if (!user) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError("Invalid username");
     }
 
     const storedUserPassword = user.password;
     const isPasswordValid = await compare(password, storedUserPassword);
     if (!isPasswordValid) {
       throw new UnauthorizedError("Invalid password");
+    }
+
+    if (!user.is_active) {
+      throw new UnauthorizedError("Access denied: Please contact the administrator to resolve this issue.");
     }
 
     //* generate a JWT token

@@ -112,45 +112,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             return false;
           }
 
-          try {
-            const profileResponse = await profileAPI.getUserProfile();
-            const completeUser =
-              profileResponse.data && profileResponse.data.user
-                ? profileResponse.data.user
-                : user;
+          setUserData(user);
 
-            setUserData(completeUser);
-
-            if (completeUser.role === "admin") {
-              navigate("/admin");
-            } else if (completeUser.role === "teacher") {
-              navigate("/teacher");
-            } else {
-              navigate("/");
-            }
-            return true;
-          } catch (profileError) {
-            console.error("Error fetching user profile:", profileError);
-            // Still set the basic user data we have
-            setUserData(user);
-
-            if (user.role === "admin") {
-              navigate("/admin");
-            } else if (user.role === "teacher") {
-              navigate("/teacher");
-            } else {
-              navigate("/");
-            }
-            return true;
+          if (user.role === "admin") {
+            navigate("/admin");
+          } else if (user.role === "teacher") {
+            navigate("/teacher");
+          } else {
+            navigate("/");
           }
-        } else {
-          console.error("Invalid response format:", response.data);
-          Swal.fire({
-            icon: "error",
-            title: "Error!",
-            text: response.data?.message || "Login failed. Please try again.",
-          });
-          return false;
         }
       } catch (error: Error | unknown) {
         console.error("Login error:", error);

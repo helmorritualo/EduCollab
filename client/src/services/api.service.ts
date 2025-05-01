@@ -129,8 +129,75 @@ export const userAPI = {
         const response = await api.get(`/api/users`);
         return response.data;
     },
-    deleteUser: async (id: number) => {
-        const response = await api.delete(`/api/user/${id}`);
+    activateUser: async (userId: number) => {
+        const response = await api.put(`/api/user/activate/${userId}`);
+        return response.data;
+    },
+    deactivateUser: async (userId: number) => {
+        const response = await api.put(`/api/user/deactivate/${userId}`);
+        return response.data;
+    }
+};
+
+export const groupAPI = {
+    getAllGroups: async () => {
+        const response = await api.get(`/api/groups`);
+        return response.data;
+    },
+    getGroupById: async (groupId: number) => {
+        const response = await api.get(`/api/groups/${groupId}`);
+        return response.data;
+    },
+    createGroup: async (data: {
+        name: string;
+        description: string;
+    }) => {
+        const response = await api.post(`/api/groups`, data);
+        return response.data;
+    },
+    updateGroup: async (groupId: number, data: {
+        name?: string;
+        description?: string;
+    }) => {
+        const response = await api.put(`/api/groups/${groupId}`, data);
+        return response.data;
+    },
+    deleteGroup: async (groupId: number) => {
+        const response = await api.delete(`/api/groups/${groupId}`);
+        return response.data;
+    },
+    joinGroup: async () => {
+        const response = await api.post(`/api/groups/join`);
+        return response.data;
+    },
+    listUserGroups: async () => {
+        const response = await api.get(`/api/user/groups`);
+        return response.data;
+    },
+    getGroupDetails: async (groupId: number) => {
+        const response = await api.get(`/api/groups/${groupId}/details`);
+        return response.data;
+    },
+    getGroupsByTeacher: async () => {
+        const response = await api.get(`/api/teachers/groups`);
+        return response.data;
+    },
+    createTeacherGroupInvitation: async (data: {
+        groupId: number;
+        invited_teacher_id: number;
+        project_details: string;
+    }) => {
+        const response = await api.post(`/api/teacher-group-invitations`, data);
+        return response.data;
+    },
+    getInvitationsForTeacher: async () => {
+        const response = await api.get(`/api/teacher-group-invitations`);
+        return response.data;
+    },
+    respondToInvitation: async (invitationId: number, data: {
+        response: string;
+    }) => {
+        const response = await api.patch(`/api/teacher-group-invitations/${invitationId}`, data);
         return response.data;
     }
 };

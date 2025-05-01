@@ -49,13 +49,13 @@ const MainLayout = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-sm transform transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-55 bg-white shadow-sm transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-[0.9rem]">
-            <h1 className="text-[2rem] font-bold text-blue-600 pl-8">EduCollab</h1>
+            <h1 className="text-[2rem] font-bold text-blue-600 pl-5">EduCollab</h1>
             <button
               className="lg:hidden"
               onClick={() => setIsSidebarOpen(false)}
@@ -135,7 +135,7 @@ const MainLayout = () => {
       </div>
 
       {/* Main Content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-54">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-white shadow-sm">
           <div className="flex items-center justify-between px-4 py-3">
