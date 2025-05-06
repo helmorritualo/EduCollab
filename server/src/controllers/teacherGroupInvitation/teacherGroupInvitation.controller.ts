@@ -1,17 +1,17 @@
 import { Context } from "hono";
 import {
-  createTeacherGroupInvitationService,
+  createTeacherGroupInvitationByNamesService,
   getInvitationsForTeacherService,
   respondToInvitationService,
 } from "@/services/teacherGroupInvitation.service";
 
 export const createTeacherGroupInvitation = async (c: Context) => {
-  const { group_id, invited_teacher_id, project_details } = await c.req.json();
+  const { group_name, invited_teacher_name, project_details } = await c.req.json();
   const invited_by = c.get("user_id");
 
-  const invitation = await createTeacherGroupInvitationService(
-    Number(group_id),
-    Number(invited_teacher_id),
+  const invitation = await createTeacherGroupInvitationByNamesService(
+    group_name,
+    invited_teacher_name,
     invited_by,
     project_details
   );

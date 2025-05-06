@@ -1,28 +1,39 @@
 import { NotFoundError, BadRequestError } from "@/utils/error";
-import { joinGroup, getGroupDetails, listUserGroups } from "@/models/groupMember";
+import { joinGroup, leaveGroup, getGroupDetails, listUserGroups } from "@/models/groupMember";
 
 export const joinGroupService = async (
   user_id: number,
   group_code: string   
 ) =>  {
   try {
-    const group = await getGroupDetails(parseInt(group_code));
-    if (!group) {
-      throw new NotFoundError("Group not found");
-    }
     const isJoined = await joinGroup(user_id, group_code);
     if (!isJoined) {
-      throw new BadRequestError("Failed to join group");
+      throw new NotFoundError("Group not found or failed to join group");
     }
-    return {
-      group_id: group.group_id,
-      group_code: group.group_code,
-    }
+    return true;
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof BadRequestError) {
       throw error;
     }
     throw new Error("Failed to join group");
+  }
+};
+
+export const leaveGroupService = async (
+  user_id: number,
+  group_id: number
+) => {
+  try {
+    const hasLeft = await leaveGroup(user_id, group_id);
+    if (!hasLeft) {
+      throw new NotFoundError("Group not found or user is not a member of this group");
+    }
+    return true;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new Error("Failed to leave group");
   }
 };
 

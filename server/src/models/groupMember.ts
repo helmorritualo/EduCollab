@@ -21,7 +21,24 @@ export const joinGroup = async (
   }
 };
 
-// Retrieves details of a specific group, including members and project description.
+export const leaveGroup = async (
+  user_id: number,
+  group_id: number
+): Promise<boolean> => {
+  try {
+    const sql = `
+      DELETE FROM group_members
+      WHERE group_id = ? AND user_id = ?
+    `;
+    const [result] = await conn.execute(sql, [group_id, user_id]);
+    return (result as { affectedRows: number }).affectedRows > 0;
+  } catch (error) {
+    console.error(`Error leaving group: ${error}`);
+    throw error;
+  }
+};
+
+// Retrieves details of a specific group, including members and group description.
 export const getGroupDetails = async (
   group_id: number
 ): Promise<(GroupWithCreator & { members: any[] }) | null> => {
@@ -40,7 +57,7 @@ export const getGroupDetails = async (
     
     // Then, get the members of the group
     const membersSql = `
-      SELECT u.full_name, u.role
+      SELECT u.full_name, u.email, u.gender,  u.role
       FROM users u
       JOIN group_members gm ON u.user_id = gm.user_id
       WHERE gm.group_id = ?
@@ -64,7 +81,7 @@ export const listUserGroups = async (
 ): Promise<GroupWithCreator[]> => {
   try {
     const sql = `
-    SELECT g.group_id, g.name, g.description, g.group_code, u.full_name as creator_name
+    SELECT g.group_id, g.name, g.description, u.full_name as creator_name
     FROM groups g
     JOIN users u ON g.created_by = u.user_id
     JOIN group_members gm ON g.group_id = gm.group_id

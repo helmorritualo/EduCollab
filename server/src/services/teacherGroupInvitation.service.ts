@@ -1,27 +1,23 @@
 import {
-  createTeacherGroupInvitation,
+  createTeacherGroupInvitationByNames,
   getInvitationsForTeacher,
   respondToInvitation,
 } from "@/models/teacherGroupInvitation";
 import { BadRequestError, NotFoundError } from "@/utils/error";
 
-export const createTeacherGroupInvitationService = async (
-  group_id: number,
-  invited_teacher_id: number,
+export const createTeacherGroupInvitationByNamesService = async (
+  group_name: string,
+  invited_teacher_name: string,
   invited_by: number,
   project_details: string
 ) => {
   // Validate inputs
-  if (!group_id || isNaN(group_id)) {
-    throw new BadRequestError("Invalid group ID");
+  if (!group_name || group_name.trim() === "") {
+    throw new BadRequestError("Group name cannot be empty");
   }
 
-  if (!invited_teacher_id || isNaN(invited_teacher_id)) {
-    throw new BadRequestError("Invalid teacher ID");
-  }
-
-  if (!invited_by || isNaN(invited_by)) {
-    throw new BadRequestError("Invalid inviter ID");
+  if (!invited_teacher_name || invited_teacher_name.trim() === "") {
+    throw new BadRequestError("Teacher name cannot be empty");
   }
 
   if (!project_details || project_details.trim() === "") {
@@ -29,9 +25,9 @@ export const createTeacherGroupInvitationService = async (
   }
   
   try {
-    const invitation = await createTeacherGroupInvitation(
-      group_id,
-      invited_teacher_id,
+    const invitation = await createTeacherGroupInvitationByNames(
+      group_name,
+      invited_teacher_name,
       invited_by,
       project_details
     );
@@ -48,6 +44,7 @@ export const createTeacherGroupInvitationService = async (
     throw error;
   }
 };
+
 
 export const getInvitationsForTeacherService = async (teacher_id: number) => {
   try {

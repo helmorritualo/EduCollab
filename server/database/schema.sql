@@ -49,14 +49,6 @@ CREATE TABLE group_members (
 -- index for group_members table
 CREATE INDEX idx_group_members_user_id ON group_members(user_id);
 
-CREATE TABLE teacher_groups (
-    teacher_id INT NOT NULL,
-    group_id INT NOT NULL,
-    PRIMARY KEY (teacher_id, group_id),
-    FOREIGN KEY (teacher_id) REFERENCES users(user_id) ON DELETE CASCADE ,
-    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE 
-);
-
 CREATE TABLE teacher_group_invitations (
     invitation_id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL,

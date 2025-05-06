@@ -5,7 +5,7 @@ import { generateGroupCode } from "@/helpers/generateGroupCode";
 export const getAllGroups = async (): Promise<GroupWithCreator[]> => {
   try {
     const sql = `
-      SELECT g.group_id g.name, g.description, g.group_code, u.full_name AS creator_name
+      SELECT g.*, u.full_name AS creator_name
       FROM groups g
       JOIN users u ON g.created_by = u.user_id
     `;
@@ -37,12 +37,13 @@ export const getGroupById = async (
 
 export const createGroup = async (
   group: Group
-): Promise<GroupWithCreator> => {
+) => {
   try {
 
     const group_code = generateGroupCode();
 
     // Check if group_code already exists
+    // to avoid duplicate group codes 
     const checkSql = "SELECT * FROM groups WHERE group_code =?";
     const [checkResult] = await conn.execute(checkSql, [group_code]);
     if ((checkResult as Group[]).length > 0) {
@@ -58,7 +59,14 @@ export const createGroup = async (
       group_code,
     ]);
 
-    return (result as any).insertId;
+    const insertId = (result as any).insertId;
+    
+    // Add the creator as a member of the group
+    const memberSql = "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)";
+    await conn.execute(memberSql, [insertId, group.created_by]);
+    
+    // Fetch the complete group data with creator information
+    return await getGroupById(insertId);
   } catch (error) {
     console.error(`Error creating group: ${error}`);
     throw error;

@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import {
   joinGroupService,
+  leaveGroupService,
   getGroupDetailsService,
   listUserGroupsService,
 } from "@/services/groupMember.service";
@@ -18,6 +19,18 @@ export const joinGroup = async (c: Context) => {
     },
     200
   );
+};
+
+export const leaveGroup = async (c: Context) => {
+  const group_id = c.req.param("group_id");
+  const user_id = c.get("user_id");
+
+  await leaveGroupService(user_id, Number(group_id));
+
+  return c.json({
+    success: true,
+    message: "Left group successfully",
+  });
 };
 
 export const getGroupDetails = async (c: Context) => {

@@ -1,23 +1,47 @@
 import conn from "@/config/database";
 
-export const createTeacherGroupInvitation = async (
-  group_id: number,
-  invited_teacher_id: number,
+export const createTeacherGroupInvitationByNames = async (
+  group_name: string,
+  invited_teacher_name: string,
   invited_by: number,
   project_details: string
 ) => {
-  
   try {
+    // First, get the group_id from the group_name
+    const groupSql = `SELECT group_id FROM groups WHERE name = ?`;
+    const [groupResult] = await conn.execute(groupSql, [group_name]);
+    const groupRows = groupResult as any[];
+    
+    if (groupRows.length === 0) {
+      throw new Error(`Group with name '${group_name}' not found`);
+    }
+    
+    const group_id = groupRows[0].group_id;
+    
+    // Then, get the teacher_id from the teacher_name
+    const teacherSql = `SELECT user_id FROM users WHERE full_name = ? AND role = 'teacher'`;
+    const [teacherResult] = await conn.execute(teacherSql, [invited_teacher_name]);
+    const teacherRows = teacherResult as any[];
+    
+    if (teacherRows.length === 0) {
+      throw new Error(`Teacher with name '${invited_teacher_name}' not found`);
+    }
+    
+    const invited_teacher_id = teacherRows[0].user_id;
+    
+    // Now create the invitation with the resolved IDs
     const sql = `
     INSERT INTO teacher_group_invitations (group_id, invited_teacher_id, invited_by, project_details)
     VALUES (?, ?, ?, ?)
-  `;
+    `;
+    
     const [result] = await conn.execute(sql, [
       group_id,
       invited_teacher_id,
       invited_by,
       project_details,
     ]);
+    
     return (result as any).insertId;
   } catch (error) {
     console.error(`Error creating invitation: ${error}`);
@@ -31,7 +55,6 @@ export const getInvitationsForTeacher = async (teacher_id: number) => {
     const sql = `
     SELECT
       i.invitation_id,
-      g.name AS group_name,
       i.project_details,
       i.status,
       g.name AS group_name,
