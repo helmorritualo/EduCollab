@@ -52,9 +52,9 @@ export const getGroupDetails = async (
     `;
     const [groupResult] = await conn.execute(groupSql, [group_id]);
     const group = (groupResult as GroupWithCreator[])[0];
-    
+
     if (!group) return null;
-    
+
     // Then, get the members of the group
     const membersSql = `
       SELECT u.full_name, u.email, u.gender,  u.role
@@ -63,11 +63,11 @@ export const getGroupDetails = async (
       WHERE gm.group_id = ?
     `;
     const [membersResult] = await conn.execute(membersSql, [group_id]);
-    
+
     // Add members to the group object
     return {
       ...group,
-      members: membersResult as any[]
+      members: membersResult as any[],
     };
   } catch (error) {
     console.error(`Error fetching group details: ${error}`);
@@ -81,7 +81,7 @@ export const listUserGroups = async (
 ): Promise<GroupWithCreator[]> => {
   try {
     const sql = `
-    SELECT g.group_id, g.name, g.description, u.full_name as creator_name
+    SELECT g.group_id, g.name, g.description, g.group_code, g.created_by, u.full_name as creator_name
     FROM groups g
     JOIN users u ON g.created_by = u.user_id
     JOIN group_members gm ON g.group_id = gm.group_id

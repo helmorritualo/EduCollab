@@ -1,3 +1,4 @@
+import conn from "@/config/database";
 import {
   createTeacherGroupInvitationByNames,
   getInvitationsForTeacher,
@@ -23,8 +24,19 @@ export const createTeacherGroupInvitationByNamesService = async (
   if (!project_details || project_details.trim() === "") {
     throw new BadRequestError("Project details cannot be empty");
   }
-  
+
   try {
+    // Check if there's already a pending invitation
+    const existingInvitation = await checkExistingInvitation(
+      group_name,
+      invited_teacher_name
+    );
+    if (existingInvitation) {
+      throw new BadRequestError(
+        "An invitation for this teacher in this group already exists"
+      );
+    }
+
     const invitation = await createTeacherGroupInvitationByNames(
       group_name,
       invited_teacher_name,
@@ -41,10 +53,32 @@ export const createTeacherGroupInvitationByNamesService = async (
     if (error instanceof BadRequestError) {
       throw error;
     }
-    throw error;
+    throw new BadRequestError(
+      error instanceof Error ? error.message : "Failed to create invitation"
+    );
   }
 };
 
+// Helper function to check for existing invitations
+const checkExistingInvitation = async (
+  group_name: string,
+  teacher_name: string
+) => {
+  try {
+    const sql = `
+      SELECT i.*
+      FROM teacher_group_invitations i
+      JOIN groups g ON i.group_id = g.group_id
+      JOIN users u ON i.invited_teacher_id = u.user_id
+      WHERE g.name = ? AND u.full_name = ? AND i.status = 'pending'
+    `;
+    const [result] = await conn.execute(sql, [group_name, teacher_name]);
+    return (result as any[]).length > 0;
+  } catch (error) {
+    console.error("Error checking existing invitation:", error);
+    return false;
+  }
+};
 
 export const getInvitationsForTeacherService = async (teacher_id: number) => {
   try {

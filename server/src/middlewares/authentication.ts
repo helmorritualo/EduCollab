@@ -15,13 +15,13 @@ export const authenticate = async (c: Context, next: Next) => {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       throw new UnauthorizedError("Authentication required");
     }
-    
+
     const token = authHeader.split(" ")[1] as string;
 
     try {
-      // * verify token 
+      // * verify token
       const verifyToken = await verify(token, config.jwtSecret) as any;
-      
+
       if (!verifyToken || !verifyToken.user_id) {
         throw new UnauthorizedError("Invalid token");
       }
@@ -34,6 +34,7 @@ export const authenticate = async (c: Context, next: Next) => {
 
       c.set("jwtPayload", verifyToken);
       c.set("user_id", verifyToken.user_id);
+      c.set("user_role", user.role); // Set user role for further authorization checks
 
       await next();
     } catch (verifyError) {
@@ -91,12 +92,12 @@ export const authenticateForRefreshToken = async (c: Context, next: Next) => {
 
     //* Set the token for refresh endpoint
     c.set("expiredToken", token);
-    
+
     await next();
   } catch (error) {
     console.error(`Error in refresh token middleware: ${error}`);
     if (error instanceof UnauthorizedError) {
-      throw error; 
+      throw error;
     }
     throw error;
   }

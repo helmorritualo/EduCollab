@@ -5,7 +5,7 @@ import { generateGroupCode } from "@/helpers/generateGroupCode";
 export const getAllGroups = async (): Promise<GroupWithCreator[]> => {
   try {
     const sql = `
-      SELECT g.*, u.full_name AS creator_name
+      SELECT g.group_id, g.name, g.description, g.group_code, g.created_by, u.full_name AS creator_name
       FROM groups g
       JOIN users u ON g.created_by = u.user_id
     `;
@@ -35,15 +35,12 @@ export const getGroupById = async (
   }
 };
 
-export const createGroup = async (
-  group: Group
-) => {
+export const createGroup = async (group: Group) => {
   try {
-
     const group_code = generateGroupCode();
 
     // Check if group_code already exists
-    // to avoid duplicate group codes 
+    // to avoid duplicate group codes
     const checkSql = "SELECT * FROM groups WHERE group_code =?";
     const [checkResult] = await conn.execute(checkSql, [group_code]);
     if ((checkResult as Group[]).length > 0) {
@@ -60,11 +57,12 @@ export const createGroup = async (
     ]);
 
     const insertId = (result as any).insertId;
-    
+
     // Add the creator as a member of the group
-    const memberSql = "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)";
+    const memberSql =
+      "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)";
     await conn.execute(memberSql, [insertId, group.created_by]);
-    
+
     // Fetch the complete group data with creator information
     return await getGroupById(insertId);
   } catch (error) {
@@ -124,4 +122,21 @@ export const deleteGroup = async (groupId: number): Promise<boolean> => {
   }
 };
 
-
+export const getGroupByName = async (
+  name: string
+): Promise<GroupWithCreator | null> => {
+  try {
+    const sql = `
+      SELECT g.*, u.full_name AS creator_name
+      FROM groups g
+      JOIN users u ON g.created_by = u.user_id
+      WHERE g.name = ?
+    `;
+    const [result] = await conn.execute(sql, [name]);
+    const groups = result as GroupWithCreator[];
+    return groups?.[0] || null;
+  } catch (error) {
+    console.error(`Error getting group by name: ${error}`);
+    throw error;
+  }
+};

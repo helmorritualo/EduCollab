@@ -4,26 +4,42 @@ import {
   getInvitationsForTeacherService,
   respondToInvitationService,
 } from "@/services/teacherGroupInvitation.service";
+import { getGroupByName } from "@/models/group";
+import { BadRequestError, UnauthorizedError } from "@/utils/error";
 
 export const createTeacherGroupInvitation = async (c: Context) => {
-  const { group_name, invited_teacher_name, project_details } = await c.req.json();
-  const invited_by = c.get("user_id");
+  const { group_name, invited_teacher_name, project_details } =
+    await c.req.json();
+  const invited_by = Number(c.get("user_id"));
+  const user_role = c.get("user_role");
 
-  const invitation = await createTeacherGroupInvitationByNamesService(
-    group_name,
-    invited_teacher_name,
-    invited_by,
-    project_details
-  );
+  // Get group details to check ownership
+  const group = await getGroupByName(group_name);
+  if (!group) {
+    throw new BadRequestError(`Group '${group_name}' not found`);
+  }
 
-  return c.json(
-    {
-      success: true,
-      message: "Invitation created successfully",
-      invitation: invitation
-    },
-    201
-  );
+  // Allow admins or student creators of the group to invite teachers
+  if (
+    user_role === "admin" ||
+    (user_role === "student" && group.created_by === invited_by)
+  ) {
+    const invitation = await createTeacherGroupInvitationByNamesService(
+      group_name,
+      invited_teacher_name,
+      invited_by,
+      project_details
+    );
+
+    return c.json(
+      {
+        success: true,
+        message: "Invitation created successfully",
+        invitation: invitation,
+      },
+      201
+    );
+  }
 };
 
 export const getInvitationsForTeacher = async (c: Context) => {
@@ -58,12 +74,16 @@ export const respondToInvitation = async (c: Context) => {
     );
   }
 
-  await respondToInvitationService(Number(invitation_id), status);
+  const invitation = await respondToInvitationService(
+    Number(invitation_id),
+    status
+  );
 
   return c.json(
     {
       success: true,
       message: `Invitation ${status} successfully`,
+      invitation,
     },
     200
   );
