@@ -77,45 +77,48 @@ CREATE INDEX idx_teacher_group_invitations_invited_teacher_id ON teacher_group_i
 CREATE INDEX idx_teacher_group_invitations_status ON teacher_group_invitations(status);
 
 CREATE TABLE tasks (
-    task_id INT AUTO_INCREMENT PRIMARY KEY,
-    group_id INT NOT NULL,
-    uploaded_by INT NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    subject VARCHAR(255) NOT NULL,
-    type ENUM('Assignment', 'Project', 'Activity') NOT NULL,
-    description TEXT,
-    due_date DATE,
-    status ENUM('Not Started', 'In Progress', 'Completed') DEFAULT 'Not Started' NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (uploaded_by) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+  task_id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  status ENUM('pending', 'in progress', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  due_date DATE NOT NULL,
+  group_id INT NOT NULL,
+  created_by INT NOT NULL,
+  assigned_to INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (assigned_to) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
--- indexes for tasks table
+-- Add indexes for tasks table
 CREATE INDEX idx_tasks_group_id ON tasks(group_id);
-CREATE INDEX idx_tasks_uploaded_by ON tasks(uploaded_by);
-CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX idx_tasks_created_by ON tasks(created_by);
+CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
 CREATE INDEX idx_tasks_status ON tasks(status);
-CREATE INDEX idx_tasks_subject ON tasks(subject);
-CREATE INDEX idx_tasks_type ON tasks(type);
+CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 
-CREATE TABLE files (
+CREATE TABLE file_uploads (
     file_id INT AUTO_INCREMENT PRIMARY KEY,
+    filename VARCHAR(255) NOT NULL,
+    original_filename VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    file_size INT NOT NULL,
+    task_id INT,
     group_id INT NOT NULL,
     uploaded_by INT NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (uploaded_by) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+    FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
+    FOREIGN KEY (uploaded_by) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
--- indexes for files table
-CREATE INDEX idx_files_group_id ON files(group_id);
-CREATE INDEX idx_files_uploaded_by ON files(uploaded_by);
-CREATE INDEX idx_files_uploaded_at ON files(uploaded_at);
-CREATE INDEX idx_files_file_name ON files(file_name);
+-- Add indexes for file_uploads table
+CREATE INDEX idx_file_uploads_task_id ON file_uploads(task_id);
+CREATE INDEX idx_file_uploads_group_id ON file_uploads(group_id);
+CREATE INDEX idx_file_uploads_uploaded_by ON file_uploads(uploaded_by);
 
 
 CREATE TABLE Messages (

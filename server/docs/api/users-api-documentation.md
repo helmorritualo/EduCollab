@@ -2,6 +2,8 @@
 
 This document provides detailed information about the user API endpoints in the EduCollab System.
 
+Base URL: `http://localhost:5000`
+
 ## Endpoints
 
 ### 1. Get All Users
@@ -15,6 +17,7 @@ This document provides detailed information about the user API endpoints in the 
 **Parameters:** None
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -55,9 +58,11 @@ This document provides detailed information about the user API endpoints in the 
 **Controller Function:** `getUserProfile`
 
 **Parameters:**
+
 - `user_id` (URL parameter): The ID of the user to retrieve
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -87,10 +92,12 @@ This document provides detailed information about the user API endpoints in the 
 **Controller Function:** `updateUserProfile`
 
 **Parameters:**
+
 - `user_id` (URL parameter): The ID of the user to update
 - Request Body: JSON object containing user data to update
 
 **Request Body Example:**
+
 ```json
 {
   "username": "johndoe_updated",
@@ -102,6 +109,7 @@ This document provides detailed information about the user API endpoints in the 
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -131,8 +139,10 @@ This document provides detailed information about the user API endpoints in the 
 **Controller Function:** `updateUserPassword`
 
 **Parameters:**
+
 - `user_id` (URL parameter): The ID of the user whose password to update
 - Request Body:
+
 ```json
 {
   "oldPassword": "current-password",
@@ -141,6 +151,7 @@ This document provides detailed information about the user API endpoints in the 
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -155,16 +166,20 @@ This document provides detailed information about the user API endpoints in the 
 
 ### 5. Deactivate User
 
-**Description:** Deletes a user from the system.
+**Description:** Deactivates a user account in the system.
 
-**Endpoint:** `PUT /user/deactivate/:user_id`
+**Endpoint:** `PUT /api/user/deactivate/:user_id`
 
 **Controller Function:** `deactivateUser`
 
+**Authentication Required:** Yes (Admin only)
+
 **Parameters:**
-- `user_id` (URL parameter): The ID of the user to delete
+
+- `user_id` (URL parameter): The ID of the user to deactivate
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -176,16 +191,20 @@ This document provides detailed information about the user API endpoints in the 
 
 ### 6. Activate User
 
-**Description:** Deletes a user from the system.
+**Description:** Activates a previously deactivated user account.
 
-**Endpoint:** `PUT /user/activate/:user_id`
+**Endpoint:** `PUT /api/user/activate/:user_id`
 
 **Controller Function:** `activateUser`
 
+**Authentication Required:** Yes (Admin only)
+
 **Parameters:**
-- `user_id` (URL parameter): The ID of the user to delete
+
+- `user_id` (URL parameter): The ID of the user to activate
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -201,12 +220,14 @@ All endpoints return appropriate error responses with descriptive messages when 
 
 - 400 Bad Request: Invalid input data
 - 401 Unauthorized: Authentication required
+- 403 Forbidden: Insufficient permissions (non-admin user)
 - 404 Not Found: Resource not found
 - 500 Internal Server Error: Server-side error
 
 ## Dependencies
 
 These controller functions rely on the following services:
+
 - `getAllUsersService`
 - `getUserProfileService`
 - `updateUserService`

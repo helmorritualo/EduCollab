@@ -1,6 +1,6 @@
 # EduCollab System API Documentation
 
-Base URL: `http//localhost:5000`
+Base URL: `http://localhost:5000`
 
 ## Authentication API
 
@@ -20,6 +20,7 @@ Password: `eduAdmin2025`
 **Authentication Required:** No
 
 **Request Body:**
+
 ```json
 {
   "username": "string",
@@ -33,11 +34,13 @@ Password: `eduAdmin2025`
 ```
 
 **Validation Rules:**
+
 - All fields are required
 - Email must be in a valid format
 - Password must be at least 8 characters long
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -53,6 +56,7 @@ Password: `eduAdmin2025`
 ```
 
 **Status Codes:**
+
 - `201 Created`: User successfully registered
 - `400 Bad Request`: Invalid input data
 - `500 Internal Server Error`: Server error
@@ -66,6 +70,7 @@ Password: `eduAdmin2025`
 **Authentication Required:** No
 
 **Request Body:**
+
 ```json
 {
   "username": "string",
@@ -74,9 +79,11 @@ Password: `eduAdmin2025`
 ```
 
 **Validation Rules:**
+
 - Username and password are required
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -94,6 +101,7 @@ Password: `eduAdmin2025`
 ```
 
 **Status Codes:**
+
 - `200 OK`: User successfully logged in
 - `400 Bad Request`: Invalid input data
 - `401 Unauthorized`: Invalid credentials
@@ -103,16 +111,18 @@ Password: `eduAdmin2025`
 
 **Endpoint:** `POST /api/refresh-token`
 
-**Description:** Refreshes an existing JWT token.
+**Description:** Refreshes an expired JWT token.
 
 **Authentication Required:** Yes (Bearer Token)
 
 **Request Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -122,6 +132,7 @@ Authorization: Bearer <token>
 ```
 
 **Status Codes:**
+
 - `200 OK`: Token successfully refreshed
 - `400 Bad Request`: No token provided
 - `401 Unauthorized`: Invalid token
@@ -138,6 +149,7 @@ Authorization: Bearer <token>
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized`: Authentication required or invalid token
 - `404 Not Found`: User not found
 
@@ -150,5 +162,26 @@ Some endpoints support optional authentication, where the user can be authentica
 Certain endpoints require admin privileges. These endpoints will check if the authenticated user has the "admin" role.
 
 **Error Responses:**
+
 - `401 Unauthorized`: Authentication required
 - `403 Forbidden`: Admin access required
+
+### Role-Based Authorization
+
+Certain endpoints require specific role privileges:
+
+1. Admin Routes:
+
+   - Require valid authentication token
+   - User must have "admin" role
+   - Returns `403 Forbidden` if user is not an admin
+
+2. Teacher Routes:
+
+   - Require valid authentication token
+   - User must have "teacher" role
+   - Returns `403 Forbidden` if user is not a teacher
+
+3. Student Routes:
+   - Require valid authentication token
+   - Available to all authenticated users

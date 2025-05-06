@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { registerHandler, loginHandler, refreshTokenHandler } from "./auth.controller";
-import { validateLogin, validateRegister } from "@/middlewares/validation";
+import { validateLogin, validateRegister } from "@/middlewares/auth-validation";
 import { authenticateForRefreshToken } from "@/middlewares/authentication";
 
 const authRoutes = new Hono()
