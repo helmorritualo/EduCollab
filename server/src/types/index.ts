@@ -29,8 +29,8 @@ export type Task = {
   status: string;
   due_date: string;
   group_id: number;
+  assigned_to?: number | null;
   created_by: number;
-  assigned_to: number | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -38,5 +38,33 @@ export type Task = {
 export type TaskWithDetails = Task & {
   group_name?: string;
   creator_name: string;
-  assignee_name?: string;
 };
+
+export interface FileUpload {
+  file_id?: number;
+  filename: string;
+  original_filename: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+  task_id?: number | null;
+  group_id: number;
+  uploaded_by: number;
+  uploaded_at?: Date;
+}
+
+export interface GroupMember {
+  user_id: number;
+  group_id: number;
+  role?: string;
+}
+
+export interface FileUploadWithDetails extends FileUpload {
+  uploader: {
+    username: string;
+    full_name: string;
+  };
+  group: {
+    name: string;
+  };
+}

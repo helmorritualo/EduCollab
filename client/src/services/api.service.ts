@@ -1,6 +1,12 @@
 import axios, { AxiosResponse } from "axios";
 import { validateResponse } from "@/helpers/validate-response";
-import { Group, GroupWithMembers, TeacherInvitation } from "@/types";
+import {
+  Group,
+  GroupWithMembers,
+  TeacherInvitation,
+  FileUpload,
+  TaskWithDetails,
+} from "@/types";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -8,12 +14,17 @@ interface ApiResponse<T> {
   groups?: T extends Array<unknown> ? T : never;
   group?: T extends object ? T : never;
   data?: T;
+  files?: FileUpload[];
+  file_id?: number;
   invitations?: T extends { invitations: TeacherInvitation[] }
     ? TeacherInvitation[]
     : never;
   invitation?: T extends { invitation: TeacherInvitation }
     ? TeacherInvitation
     : never;
+  task_id?: number;
+  task?: T extends { task: TaskWithDetails } ? TaskWithDetails : never;
+  tasks?: T extends { tasks: TaskWithDetails[] } ? TaskWithDetails[] : never;
 }
 
 const api = axios.create({
@@ -62,6 +73,10 @@ api.interceptors.response.use(
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
+
+      // Add a small delay before attempting token refresh
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       try {
         const token = localStorage.getItem("token");
         if (token) {
@@ -277,4 +292,172 @@ export const groupAPI = {
       throw new Error("Failed to respond to invitation");
     }
   },
+};
+
+export const fileAPI = {
+  uploadFile: async (
+    file: File,
+    groupId: number,
+    taskId?: number
+  ): Promise<number> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("groupId", groupId.toString());
+    if (taskId) {
+      formData.append("taskId", taskId.toString());
+    }
+
+    const response = await api.post<ApiResponse<void>>("/api/files", formData);
+    if (!response.data.success || response.data.file_id === undefined) {
+      throw new Error(response.data.message || "Failed to upload file");
+    }
+    return response.data.file_id;
+  },
+
+  getGroupFiles: async (groupId: number): Promise<FileUpload[]> => {
+    const response = await api.get<ApiResponse<void>>(
+      `/api/files/group/${groupId}`
+    );
+    return response.data.files || [];
+  },
+
+  getAllFiles: async (): Promise<FileUpload[]> => {
+    const response = await api.get<ApiResponse<void>>("/api/files/all");
+    return response.data.files || [];
+  },
+
+  downloadFile: async (fileId: number): Promise<void> => {
+    const response = await api.get(`/api/files/${fileId}/download`, {
+      responseType: "blob",
+    });
+
+    // Create blob link to download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+
+    // Extract filename from Content-Disposition header if available
+    const contentDisposition = response.headers["content-disposition"];
+    const filename = contentDisposition
+      ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+      : `file-${fileId}`;
+
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+};
+
+export const taskAPI = {
+  createTask: async (data: {
+    title: string;
+    description: string;
+    due_date: string;
+    group_id: number;
+    file?: File;
+  }): Promise<number> => {
+    try {
+      const { file, ...taskData } = data;
+      const response = await api.post<ApiResponse<{ task_id: number }>>(
+        "/api/tasks",
+        {
+          ...taskData,
+          status: "pending", // Always start with pending status
+        }
+      );
+
+      if (!response.data.task_id) {
+        throw new Error("Failed to create task: No task ID returned");
+      }
+
+      // If there's a file, upload it and associate it with the task
+      if (file) {
+        await fileAPI.uploadFile(file, data.group_id, response.data.task_id);
+      }
+
+      return response.data.task_id;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Failed to create task");
+    }
+  },
+
+  updateTask: async (
+    taskId: number,
+    data: {
+      title: string;
+      description: string;
+      status: string;
+      due_date: string;
+      group_id: number;
+      assigned_to?: number;
+      file?: File;
+    }
+  ): Promise<boolean> => {
+    const { file, ...taskData } = data;
+    const response = await api.put<ApiResponse<void>>(
+      `/api/tasks/${taskId}`,
+      taskData
+    );
+    // If there's a file, upload it and associate it with the task
+    if (file) {
+      await fileAPI.uploadFile(file, data.group_id, taskId);
+    }
+    return response.data.success;
+  },
+
+  updateTaskStatus: async (
+    taskId: number,
+    status: string
+  ): Promise<boolean> => {
+    const response = await api.patch<ApiResponse<void>>(
+      `/api/tasks/${taskId}/status`,
+      { status }
+    );
+    return response.data.success;
+  },
+
+  deleteTask: async (taskId: number): Promise<boolean> => {
+    const response = await api.delete<ApiResponse<void>>(
+      `/api/tasks/${taskId}`
+    );
+    return response.data.success;
+  },
+
+  getTaskById: async (taskId: number) => {
+    const response = await api.get<ApiResponse<{ task: TaskWithDetails }>>(
+      `/api/tasks/${taskId}`
+    );
+    if (!response.data.task) throw new Error("Task not found");
+    return response.data.task;
+  },
+
+  getTasksByGroupId: async (groupId: number) => {
+    const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(
+      `/api/groups/${groupId}/tasks`
+    );
+    return response.data.tasks || [];
+  },
+
+  getMyTasks: async () => {
+    const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(
+      "/api/tasks/my-tasks"
+    );
+    return response.data.tasks || [];
+  },
+
+  getAllTasks: async () => {
+    const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(
+      "/api/tasks"
+    );
+    return response.data.tasks || [];
+  },
+
+  downloadTaskFile: async (fileId: number): Promise<void> => {
+    return fileAPI.downloadFile(fileId);
+  }
 };

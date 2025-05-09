@@ -99,7 +99,7 @@ CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
 CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 
-CREATE TABLE file_uploads (
+CREATE TABLE files (
     file_id INT AUTO_INCREMENT PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,
     original_filename VARCHAR(255) NOT NULL,
@@ -115,10 +115,10 @@ CREATE TABLE file_uploads (
     FOREIGN KEY (uploaded_by) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
--- Add indexes for file_uploads table
-CREATE INDEX idx_file_uploads_task_id ON file_uploads(task_id);
-CREATE INDEX idx_file_uploads_group_id ON file_uploads(group_id);
-CREATE INDEX idx_file_uploads_uploaded_by ON file_uploads(uploaded_by);
+-- Add indexes for files table
+CREATE INDEX idx_file_uploads_task_id ON files(task_id);
+CREATE INDEX idx_file_uploads_group_id ON files(group_id);
+CREATE INDEX idx_file_uploads_uploaded_by ON files(uploaded_by);
 
 
 CREATE TABLE Messages (
@@ -146,6 +146,23 @@ CREATE TABLE feedbacks (
     FOREIGN KEY (teacher_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
 );
+
+CREATE TABLE task_assignments (
+    assignment_id INT AUTO_INCREMENT PRIMARY KEY,
+    task_id INT NOT NULL,
+    user_id INT NOT NULL,
+    status ENUM('pending', 'in progress', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+    submitted_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Add indexes for task_assignments table
+CREATE INDEX idx_task_assignments_task_id ON task_assignments(task_id);
+CREATE INDEX idx_task_assignments_user_id ON task_assignments(user_id);
+CREATE INDEX idx_task_assignments_status ON task_assignments(status);
 
 -- indexes for feedbacks table
 CREATE INDEX idx_feedbacks_group_id ON feedbacks(group_id);

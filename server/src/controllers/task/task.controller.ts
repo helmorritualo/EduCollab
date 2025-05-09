@@ -9,11 +9,29 @@ import {
   getTasksByUserIdService,
   getAllTasksService,
 } from "@/services/task.service";
+import { uploadFileService } from "@/services/fileUpload.service";
+import { BadRequestError } from "@/utils/error";
+import { GroupMember } from "@/types";
+import { syncTaskStatusWithAssignment } from "@/models/task_assignment";
 
 export const createTask = async (c: Context) => {
-  const { title, description, status, due_date, group_id, assigned_to } = c.get('validatedTaskBody');
+  const { title, description, status, due_date, group_id, assigned_to } =
+    c.get("validatedTaskBody");
   const user_id = c.get("user_id");
+  const groupMembers = c.get("groupMembers") as GroupMember[];
+  const file = c.get("file") as any;
 
+  // If assigned_to is provided, verify the user is a group member
+  if (assigned_to) {
+    const isGroupMember = groupMembers.some(
+      (member: GroupMember) => member.user_id === assigned_to
+    );
+    if (!isGroupMember) {
+      throw new BadRequestError("Assigned user must be a member of the group");
+    }
+  }
+
+  let fileId = null;
   const taskId = await createTaskService({
     title,
     description,
@@ -24,11 +42,27 @@ export const createTask = async (c: Context) => {
     assigned_to: assigned_to || null,
   });
 
+  if (file) {
+    // Upload file if provided, now with the correct taskId
+    fileId = await uploadFileService(
+      {
+        originalFilename: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        path: file.path,
+      },
+      taskId,
+      group_id,
+      user_id
+    );
+  }
+
   return c.json(
     {
       success: true,
       message: "Task created successfully",
       task_id: taskId,
+      file_id: fileId,
     },
     201
   );
@@ -36,9 +70,11 @@ export const createTask = async (c: Context) => {
 
 export const updateTask = async (c: Context) => {
   const task_id = parseInt(c.req.param("task_id"));
-  const { title, description, status, due_date, group_id, assigned_to } = c.get('validatedTaskBody');
+  const { title, description, status, due_date, group_id, assigned_to } =
+    c.get("validatedTaskBody");
   const user_id = c.get("user_id");
   const is_admin = c.get("user_role") === "admin";
+  const file = c.get("file") as any;
 
   await updateTaskService(
     {
@@ -55,10 +91,27 @@ export const updateTask = async (c: Context) => {
     is_admin
   );
 
+  let fileId = null;
+  if (file) {
+    // Upload file if provided, now with the correct task_id
+    fileId = await uploadFileService(
+      {
+        originalFilename: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        path: file.path,
+      },
+      task_id,
+      group_id,
+      user_id
+    );
+  }
+
   return c.json(
     {
       success: true,
       message: "Task updated successfully",
+      file_id: fileId,
     },
     200
   );
@@ -66,9 +119,14 @@ export const updateTask = async (c: Context) => {
 
 export const updateTaskStatus = async (c: Context) => {
   const task_id = parseInt(c.req.param("task_id"));
-  const { status } = c.get('validatedTaskStatusBody');
+  const { status } = c.get("validatedTaskStatusBody");
+  const user_id = c.get("user_id");
 
-  await updateTaskStatusService(task_id, status);
+  // Update the task status
+  await updateTaskStatusService(task_id, status, user_id);
+
+  // Also update the assignment status to keep them in sync
+  await syncTaskStatusWithAssignment(task_id, user_id, status);
 
   return c.json(
     {
@@ -107,7 +165,8 @@ export const getTaskById = async (c: Context) => {
 
 export const getTasksByGroupId = async (c: Context) => {
   const group_id = parseInt(c.req.param("group_id"));
-  const tasks = await getTasksByGroupIdService(group_id);
+  const user_id = c.get("user_id");
+  const tasks = await getTasksByGroupIdService(group_id, user_id);
 
   return c.json({
     success: true,
@@ -121,7 +180,7 @@ export const getTasksByUserId = async (c: Context) => {
 
   return c.json({
     success: true,
-    tasks,
+    tasks: tasks || [],
   });
 };
 

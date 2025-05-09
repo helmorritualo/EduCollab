@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { groupAPI } from "@/services/api.service";
 import { Search } from "lucide-react";
 import GroupCard from "@/components/groups/GroupCard";
+import GroupActions from "@/components/groups/GroupActions";
 import { Group } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import Swal from "sweetalert2";
@@ -61,6 +62,8 @@ const StudentGroups = () => {
           with others.
         </p>
       </div>
+
+      <GroupActions />
 
       <div className="mt-8">
         <div className="flex flex-col md:flex-row gap-4 mb-6">

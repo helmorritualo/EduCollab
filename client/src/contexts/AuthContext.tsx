@@ -10,7 +10,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { profileAPI } from "@/services/api.service";
 import axios from "axios";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { UserData, AuthContextType, User } from "@/types";
 import Swal from "sweetalert2";
 
@@ -42,37 +41,61 @@ const defaultAuthContextValue: AuthContextType = {
 const AuthContext = createContext<AuthContextType>(defaultAuthContextValue);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const {
-    token,
-    setToken,
-    removeToken,
-    userData,
-    setUserData,
-    removeUserData,
-    clearAuthStorage,
-  } = useAuthStorage();
+  const [token, setToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("token");
+    } catch (error) {
+      console.error("Error reading token from localStorage", error);
+      return null;
+    }
+  });
+  const [user, setUser] = useState<UserData | null>(() => {
+    try {
+      const savedUserData = localStorage.getItem("userData");
+      return savedUserData ? JSON.parse(savedUserData) : null;
+    } catch (error) {
+      console.error("Error reading user data from localStorage", error);
+      return null;
+    }
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [user, setUser] = useState<UserData | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const initializeAuth = async () => {
       try {
-        if (token && userData) {
-          setUser(userData);
+        setIsLoading(true);
+        const savedToken = localStorage.getItem("token");
+        const savedUserData = localStorage.getItem("userData");
+        if (savedToken && savedUserData) {
+          setToken(savedToken);
+          const parsedUserData = JSON.parse(savedUserData);
+          setUser(parsedUserData);
         } else {
+          setToken(null);
           setUser(null);
+          localStorage.removeItem("token");
+          localStorage.removeItem("userData");
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error initializing auth:", error);
+        setToken(null);
         setUser(null);
+        localStorage.removeItem("token");
+        localStorage.removeItem("userData");
       } finally {
         setIsLoading(false);
       }
     };
+    initializeAuth();
+  }, []);
 
-    fetchUserData();
-  }, [token, userData]);
+  useEffect(() => {
+    if (token && user) {
+      localStorage.setItem("token", token);
+      localStorage.setItem("userData", JSON.stringify(user));
+    }
+  }, [token, user]);
 
   const login = useCallback(
     async (username: string, password: string) => {
@@ -84,13 +107,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             password,
           }
         );
-
         if (response.data && response.data.success) {
           const { token, user } = response.data;
-
-          // Ensure token exists
           if (!token) {
-            console.error("Token missing from server response");
             Swal.fire({
               icon: "error",
               title: "Error!",
@@ -98,12 +117,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             });
             return false;
           }
-
           setToken(token);
-
-          // Handle case where user data might be missing
+          localStorage.setItem("token", token);
           if (!user) {
-            console.error("User data missing from server response");
             Swal.fire({
               icon: "error",
               title: "Error!",
@@ -111,9 +127,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             });
             return false;
           }
-
-          setUserData(user);
-
+          setUser(user);
+          localStorage.setItem("userData", JSON.stringify(user));
           if (user.role === "admin") {
             navigate("/admin");
           } else if (user.role === "teacher") {
@@ -123,11 +138,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
         }
       } catch (error: Error | unknown) {
-        console.error("Login error:", error);
-
-        // Improved error handling to capture server error messages
         let errorMessage = "Invalid Username or Password";
-
         if (axios.isAxiosError(error) && error.response) {
           if (error.response.data && error.response.data.message) {
             errorMessage = error.response.data.message;
@@ -142,17 +153,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } else if (error instanceof Error && error.message) {
           errorMessage = error.message;
         }
-
         Swal.fire({
           icon: "error",
           title: "Login Failed",
           text: errorMessage,
         });
-
         return false;
       }
     },
-    [setToken, setUserData, navigate]
+    [navigate]
   );
 
   const register = useCallback(
@@ -162,14 +171,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           "http://localhost:5000/api/auth/register",
           userData
         );
-
         if (response.data.success) {
           Swal.fire({
             title: "Success!",
             text: response.data.message,
             icon: "success",
           });
-
           navigate("/login");
           return true;
         }
@@ -189,21 +196,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     async (userData: User) => {
       try {
         const response = await profileAPI.updateUserProfile(userData);
-
         if (response.success) {
-          // Always fetch the latest user profile from backend after update
           let updatedUser = response.user;
           if (!updatedUser || !updatedUser.role) {
-            // Fallback: fetch user profile to ensure all fields are present
             const profileResponse = await profileAPI.getUserProfile();
             updatedUser =
               profileResponse.data && profileResponse.data.user
                 ? profileResponse.data.user
                 : userData;
           }
-          setUserData(updatedUser);
           setUser(updatedUser);
-
+          localStorage.setItem("userData", JSON.stringify(updatedUser));
           Swal.fire({
             title: "Success!",
             text: response.message,
@@ -230,15 +233,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return false;
       }
     },
-    [setUserData, setUser]
+    []
   );
 
   const logout = useCallback(() => {
-    removeToken();
-    removeUserData();
-    clearAuthStorage();
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
     navigate("/login");
-  }, [removeToken, removeUserData, clearAuthStorage, navigate]);
+  }, [navigate]);
 
   const value = useMemo(
     () => ({

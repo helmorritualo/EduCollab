@@ -1,5 +1,10 @@
 import { sign } from "hono/jwt";
-import { getUserByEmail, getUserByUsername, createUser, getUserById } from "@/models/user";
+import {
+  getUserByEmail,
+  getUserByUsername,
+  createUser,
+  getUserById,
+} from "@/models/user";
 import {
   InternalServerError,
   BadRequestError,
@@ -8,7 +13,7 @@ import {
 } from "@/utils/error";
 import { config } from "@/config/auth";
 import { User } from "@/types";
-import { compare, hash } from 'bcrypt';
+import { compare, hash } from "bcrypt";
 
 let payload: {
   user_id: number;
@@ -19,7 +24,8 @@ let payload: {
 
 export const register = async (userData: User) => {
   try {
-    const { username, password, email, full_name, phone_number, gender, role } = userData;
+    const { username, password, email, full_name, phone_number, gender, role } =
+      userData;
 
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
@@ -47,7 +53,7 @@ export const register = async (userData: User) => {
       full_name,
       phone_number,
       gender,
-      role
+      role,
     };
   } catch (error) {
     console.error(`Error registering user: ${error}`);
@@ -82,7 +88,9 @@ export const login = async (credentials: {
     }
 
     if (!user.is_active) {
-      throw new UnauthorizedError("Access denied: Please contact the administrator to resolve this issue.");
+      throw new UnauthorizedError(
+        "Access denied: Please contact the administrator to resolve this issue."
+      );
     }
 
     //* generate a JWT token
@@ -90,7 +98,7 @@ export const login = async (credentials: {
       user_id: user.user_id,
       email: user.email,
       role: user.role,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60, // token expire in 1 hour
+      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // token expire in 24 hours
     };
 
     const token = await sign(payload, config.jwtSecret);
@@ -114,26 +122,26 @@ export const login = async (credentials: {
 export const refreshToken = async (data: any) => {
   try {
     let userId, email, role;
-    
+
     //* Check if we're dealing with an expired token
     if (data.token) {
       try {
         //* Try to decode the token without verification
-        const tokenParts = data.token.split('.');
+        const tokenParts = data.token.split(".");
         if (tokenParts.length !== 3) {
           throw new UnauthorizedError("Invalid token format");
         }
-        
+
         //* Decode the payload parts
         const decodedPayload = JSON.parse(
-          Buffer.from(tokenParts[1], 'base64').toString()
+          Buffer.from(tokenParts[1], "base64").toString()
         );
-        
+
         //* Extract user information in the payload
         userId = decodedPayload.user_id;
         email = decodedPayload.email;
         role = decodedPayload.role;
-        
+
         const user = await getUserById(userId);
         if (!user) {
           throw new NotFoundError("User not found");
@@ -147,7 +155,7 @@ export const refreshToken = async (data: any) => {
       if (!data || !data.user_id) {
         throw new UnauthorizedError("Invalid token data");
       }
-      
+
       userId = data.user_id;
       email = data.email;
       role = data.role;
@@ -158,7 +166,7 @@ export const refreshToken = async (data: any) => {
       user_id: userId,
       email: email,
       role: role,
-      exp: Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60, // token expire in 15 days
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // token expire in 7 days
     };
 
     const newToken = await sign(payload, config.jwtSecret);
@@ -169,7 +177,7 @@ export const refreshToken = async (data: any) => {
   } catch (error) {
     console.error(`Error refreshing token: ${error}`);
     if (error instanceof UnauthorizedError || error instanceof NotFoundError) {
-      throw error; 
+      throw error;
     }
     throw new InternalServerError("Internal Server Error");
   }

@@ -55,3 +55,41 @@ export interface TeacherInvitation {
   created_at: string;
   updated_at: string;
 }
+
+export interface FileUpload {
+  file_id: number;
+  filename: string;
+  original_filename: string;
+  file_type: string;
+  file_size: number;
+  task_id?: number | null;
+  group_id: number;
+  uploaded_by: number;
+  uploaded_at: string;
+  uploader: {
+    username: string;
+    full_name: string;
+  };
+  group: {
+    name: string;
+  };
+}
+
+export interface Task {
+  task_id?: number;
+  title: string;
+  description: string;
+  status: string;
+  due_date: string;
+  group_id: number;
+  created_by: number;
+  file?: FileUpload;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TaskWithDetails extends Task {
+  group_name?: string;
+  creator_name: string;
+  assignment_status?: string;
+}

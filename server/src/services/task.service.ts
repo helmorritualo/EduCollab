@@ -10,20 +10,58 @@ import {
   isTaskCreator as isTaskCreatorModel,
 } from "@/models/task";
 import { Task } from "@/types";
-import { NotFoundError, ForbiddenError } from "@/utils/error";
+import { NotFoundError, ForbiddenError, BadRequestError } from "@/utils/error";
+import conn from "@/config/database";
 
 export const createTaskService = async (task: Task): Promise<number> => {
   try {
+    // Validate required fields
+    if (!task.title || !task.description || !task.group_id) {
+      throw new BadRequestError("Missing required task fields");
+    }
+
+    // Validate status if provided
+    const validStatuses = ["pending", "in progress", "completed", "cancelled"];
+    if (task.status && !validStatuses.includes(task.status.toLowerCase())) {
+      throw new BadRequestError(
+        `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+      );
+    }
+
+    // If there's an assigned_to value, verify it's valid
+    if (task.assigned_to) {
+      const sql = `
+        SELECT 1 FROM group_members
+        WHERE group_id = ? AND user_id = ?
+      `;
+      const [result] = await conn.execute(sql, [
+        task.group_id,
+        task.assigned_to,
+      ]);
+      if ((result as any[]).length === 0) {
+        throw new BadRequestError(
+          "Assigned user must be a member of the group"
+        );
+      }
+    }
+
     return await createTaskModel(task);
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to create task: ${error.message}`);
+    if (error instanceof BadRequestError) {
+      throw error;
     }
-    throw error;
+    if (error instanceof Error) {
+      throw new BadRequestError(`Failed to create task: ${error.message}`);
+    }
+    throw new BadRequestError("Failed to create task");
   }
 };
 
-export const updateTaskService = async (task: Task, user_id: number, is_admin: boolean): Promise<boolean> => {
+export const updateTaskService = async (
+  task: Task,
+  user_id: number,
+  is_admin: boolean
+): Promise<boolean> => {
   try {
     // Check if task exists
     const existingTask = await getTaskByIdModel(task.task_id!);
@@ -34,12 +72,36 @@ export const updateTaskService = async (task: Task, user_id: number, is_admin: b
     // Check if user is authorized to update the task
     const isCreator = existingTask.created_by === user_id;
     if (!isCreator && !is_admin) {
-      throw new ForbiddenError("You are not authorized to update this task");
+      throw new ForbiddenError(
+        "Only the teacher who created the task or admin can update it"
+      );
+    }
+
+    // If there's an assigned_to value, verify it's valid
+    if (task.assigned_to) {
+      // Check if assigned user is a member of the group
+      const sql = `
+        SELECT 1 FROM group_members
+        WHERE group_id = ? AND user_id = ?
+      `;
+      const [result] = await conn.execute(sql, [
+        task.group_id,
+        task.assigned_to,
+      ]);
+      if ((result as any[]).length === 0) {
+        throw new BadRequestError(
+          "Assigned user must be a member of the group"
+        );
+      }
     }
 
     return await updateTaskModel(task);
   } catch (error) {
-    if (error instanceof NotFoundError || error instanceof ForbiddenError) {
+    if (
+      error instanceof NotFoundError ||
+      error instanceof ForbiddenError ||
+      error instanceof BadRequestError
+    ) {
       throw error;
     }
     if (error instanceof Error) {
@@ -49,15 +111,18 @@ export const updateTaskService = async (task: Task, user_id: number, is_admin: b
   }
 };
 
-export const updateTaskStatusService = async (task_id: number, status: string): Promise<boolean> => {
+export const updateTaskStatusService = async (
+  task_id: number,
+  status: string,
+  userId: number
+): Promise<boolean> => {
   try {
     // Check if task exists
     const existingTask = await getTaskByIdModel(task_id);
     if (!existingTask) {
       throw new NotFoundError("Task not found");
     }
-
-    return await updateTaskStatusModel(task_id, status);
+    return await updateTaskStatusModel(task_id, status, userId);
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw error;
@@ -69,7 +134,11 @@ export const updateTaskStatusService = async (task_id: number, status: string): 
   }
 };
 
-export const deleteTaskService = async (task_id: number, user_id: number, is_admin: boolean): Promise<boolean> => {
+export const deleteTaskService = async (
+  task_id: number,
+  user_id: number,
+  is_admin: boolean
+): Promise<boolean> => {
   try {
     // Check if task exists
     const existingTask = await getTaskByIdModel(task_id);
@@ -113,9 +182,12 @@ export const getTaskByIdService = async (task_id: number) => {
   }
 };
 
-export const getTasksByGroupIdService = async (group_id: number) => {
+export const getTasksByGroupIdService = async (
+  group_id: number,
+  user_id: number
+) => {
   try {
-    return await getTasksByGroupIdModel(group_id);
+    return await getTasksByGroupIdModel(group_id, user_id);
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to get tasks by group ID: ${error.message}`);
@@ -126,7 +198,9 @@ export const getTasksByGroupIdService = async (group_id: number) => {
 
 export const getTasksByUserIdService = async (user_id: number) => {
   try {
-    return await getTasksByUserIdModel(user_id);
+    const tasks = await getTasksByUserIdModel(user_id);
+    // Return empty array instead of throwing error when no tasks found
+    return tasks;
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to get tasks by user ID: ${error.message}`);
@@ -146,7 +220,10 @@ export const getAllTasksService = async () => {
   }
 };
 
-export const isTaskCreatorService = async (task_id: number, user_id: number): Promise<boolean> => {
+export const isTaskCreatorService = async (
+  task_id: number,
+  user_id: number
+): Promise<boolean> => {
   try {
     return await isTaskCreatorModel(task_id, user_id);
   } catch (error) {

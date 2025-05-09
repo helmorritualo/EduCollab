@@ -57,7 +57,7 @@ export const getGroupDetails = async (
 
     // Then, get the members of the group
     const membersSql = `
-      SELECT u.full_name, u.email, u.gender,  u.role
+      SELECT u.user_id, u.full_name, u.email, u.gender, u.role
       FROM users u
       JOIN group_members gm ON u.user_id = gm.user_id
       WHERE gm.group_id = ?

@@ -143,7 +143,7 @@ const GroupDetails = () => {
             {(user?.user_id === group.created_by) && (
               <button
                 onClick={() => setShowInviteTeacher(true)}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition mb-6"
               >
                 <UserPlus className="w-5 h-5 mr-2" />
                 Invite Teacher
