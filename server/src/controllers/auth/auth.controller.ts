@@ -3,7 +3,8 @@ import { Context } from "hono";
 import { BadRequestError } from "@/utils/error";
 
 export const registerHandler = async (c: Context) => {
-  const userData = await c.req.json();
+  // Get the validated body from middleware
+  const userData = c.get('validatedBody');
 
   const user = await register(userData);
 
@@ -16,7 +17,6 @@ export const registerHandler = async (c: Context) => {
 
 export const loginHandler = async (c: Context) => {
   const userData = await c.req.json();
-
   const result = await login(userData);
   const { userWithoutPassword, token} = result;
 

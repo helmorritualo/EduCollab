@@ -569,13 +569,6 @@ export const taskAPI = {
     }
   },
 
-  /**
-   * Upload multiple files for a task
-   * @param taskId - The task ID to associate files with
-   * @param files - Array of files to upload
-   * @param groupId - The group ID the task belongs to
-   * @returns True if all files were uploaded successfully
-   */
   uploadTaskFiles: async (taskId: number, files: File[], groupId: number): Promise<boolean> => {
     try {
       // If no files, return success immediately
@@ -658,7 +651,6 @@ export const taskAPI = {
     status: string
   ): Promise<boolean> => {
     try {
-      // Send as JSON data instead of FormData
       const response = await api.patch<ApiResponse<{ success: boolean }>>(
         `/api/tasks/${taskId}/status`,
         { status }
@@ -684,8 +676,6 @@ export const taskAPI = {
     );
     return response.data.success;
   },
-
-  // getTaskById method is defined earlier in the file
 
   getTasksByGroupId: async (groupId: number) => {
     const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(

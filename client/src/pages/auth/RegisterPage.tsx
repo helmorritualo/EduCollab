@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import Swal from "sweetalert2";
 
 const RegisterPage = () => {
   const { register } = useAuth();
@@ -39,16 +40,50 @@ const RegisterPage = () => {
       !formData.role
     ) {
       setError("All fields are required");
+      Swal.fire({
+        title: 'Error!',
+        text: 'All fields are required',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3B82F6'
+      });
       return false;
     }
     if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
       setError("Invalid email format");
+      Swal.fire({
+        title: 'Invalid Email',
+        text: 'Please enter a valid email address',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3B82F6'
+      });
       return false;
     }
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters long");
+      Swal.fire({
+        title: 'Password Too Short',
+        text: 'Password must be at least 8 characters long',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3B82F6'
+      });
       return false;
     }
+
+    if(formData.phone_number.length !== 11 || isNaN(Number(formData.phone_number))) {
+      setError("Phone number must be exactly 11 characters long and only contain digits");
+      Swal.fire({
+        title: 'Invalid Phone Number Length or Non-Digit',
+        text: 'Phone number must be exactly 11 characters long and only contain digits',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3B82F6'
+      });
+      return false;
+    }
+
     return true;
   };
 
@@ -60,15 +95,40 @@ const RegisterPage = () => {
     try {
       const success = await register(formData);
       if (!success) {
-        setError("An error occurred during registration. Please try again.");
+        const errorMessage = "An error occurred during registration. Please try again.";
+        setError(errorMessage);
+        Swal.fire({
+          title: 'Registration Failed',
+          text: errorMessage,
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#3B82F6'
+        });
+      } else {
+        // Success message
+        Swal.fire({
+          title: 'Success!',
+          text: 'Registration successful! You can now log in.',
+          icon: 'success',
+          confirmButtonText: 'Continue',
+          confirmButtonColor: '#3B82F6'
+        });
       }
     } catch (err) {
       // Show backend error if available, else fallback
-      setError(
+      const errorMessage = (
         (err as Error).message ||
         (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
         "An error occurred during registration. Please try again."
       );
+      setError(errorMessage);
+      Swal.fire({
+        title: 'Registration Error',
+        text: errorMessage,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3B82F6'
+      });
     } finally {
       setIsLoading(false);
     }

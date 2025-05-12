@@ -3,12 +3,6 @@ import { BadRequestError } from "@/utils/error";
 import * as fs from "fs";
 import * as path from "path";
 
-/**
- * @deprecated This middleware is deprecated as file handling is now done directly in controllers.
- * Kept for backward compatibility with any routes still using it.
- * New file uploads should use the direct approach in fileUpload.controller.ts.
- */
-
 const ALLOWED_TYPES = [
   "application/pdf",
   "application/msword",
@@ -16,9 +10,7 @@ const ALLOWED_TYPES = [
 ];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-/**
- * @deprecated Use the direct file handling in controllers instead.
- */
+
 export const fileUploadMiddleware = async (c: Context, next: Next) => {
   try {
     console.log('WARNING: Using deprecated fileUploadMiddleware. Update to use direct file handling.');

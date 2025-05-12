@@ -9,7 +9,6 @@ import {
   getTasksByUserIdService,
   getAllTasksService,
 } from "@/services/task.service";
-import { uploadFileService } from "@/services/fileUpload.service";
 import { BadRequestError } from "@/utils/error";
 import { GroupMember } from "@/types";
 import { syncTaskStatusWithAssignment } from "@/models/task_assignment";
@@ -19,7 +18,6 @@ export const createTask = async (c: Context) => {
     c.get("validatedTaskBody");
   const user_id = c.get("user_id");
   const groupMembers = c.get("groupMembers") as GroupMember[];
-  const file = c.get("file") as any;
 
   // If assigned_to is provided, verify the user is a group member
   if (assigned_to) {
@@ -31,7 +29,6 @@ export const createTask = async (c: Context) => {
     }
   }
 
-  let fileId = null;
   const taskId = await createTaskService({
     title,
     description,
@@ -42,27 +39,11 @@ export const createTask = async (c: Context) => {
     assigned_to: assigned_to || null,
   });
 
-  if (file) {
-    // Upload file if provided, now with the correct taskId
-    fileId = await uploadFileService(
-      {
-        originalFilename: file.originalname,
-        mimetype: file.mimetype,
-        size: file.size,
-        path: file.path,
-      },
-      taskId,
-      group_id,
-      user_id
-    );
-  }
-
   return c.json(
     {
       success: true,
       message: "Task created successfully",
-      task_id: taskId,
-      file_id: fileId,
+      task_id: taskId
     },
     201
   );
@@ -91,27 +72,10 @@ export const updateTask = async (c: Context) => {
     is_admin
   );
 
-  let fileId = null;
-  if (file) {
-    // Upload file if provided, now with the correct task_id
-    fileId = await uploadFileService(
-      {
-        originalFilename: file.originalname,
-        mimetype: file.mimetype,
-        size: file.size,
-        path: file.path,
-      },
-      task_id,
-      group_id,
-      user_id
-    );
-  }
-
   return c.json(
     {
       success: true,
       message: "Task updated successfully",
-      file_id: fileId,
     },
     200
   );

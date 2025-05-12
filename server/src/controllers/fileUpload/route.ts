@@ -11,8 +11,6 @@ import { requireAdmin, authenticate } from "@/middlewares/authentication";
 // Create a new Hono app for file upload routes
 const fileUploadRoutes = new Hono();
 
-// Define routes with clear middleware ordering
-// For file uploads, we use the built-in multipart parsing in Hono
 fileUploadRoutes.post("/files", authenticate, uploadFile);
 
 // Other file routes
