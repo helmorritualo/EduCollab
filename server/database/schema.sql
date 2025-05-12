@@ -120,32 +120,6 @@ CREATE INDEX idx_file_uploads_task_id ON files(task_id);
 CREATE INDEX idx_file_uploads_group_id ON files(group_id);
 CREATE INDEX idx_file_uploads_uploaded_by ON files(uploaded_by);
 
-
-CREATE TABLE Messages (
-    message_id INT AUTO_INCREMENT PRIMARY KEY,
-    group_id INT NOT NULL,
-    sender_id INT NOT NULL,
-    content TEXT NOT NULL,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (group_id) REFERENCES Groups(group_id),
-    FOREIGN KEY (sender_id) REFERENCES Users(user_id)
-);
-
--- indexes for messages table
-CREATE INDEX idx_messages_group_id ON messages(group_id);
-CREATE INDEX idx_messages_sender_id ON messages(sender_id);
-CREATE INDEX idx_messages_content ON messages(content);
-
-CREATE TABLE feedbacks (
-    feedback_id INT AUTO_INCREMENT PRIMARY KEY,
-    group_id INT NOT NULL,
-    teacher_id INT NOT NULL,
-    comment TEXT,
-    provided_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (teacher_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
-);
-
 CREATE TABLE task_assignments (
     assignment_id INT AUTO_INCREMENT PRIMARY KEY,
     task_id INT NOT NULL,
@@ -162,9 +136,3 @@ CREATE TABLE task_assignments (
 CREATE INDEX idx_task_assignments_task_id ON task_assignments(task_id);
 CREATE INDEX idx_task_assignments_user_id ON task_assignments(user_id);
 CREATE INDEX idx_task_assignments_status ON task_assignments(status);
-
--- indexes for feedbacks table
-CREATE INDEX idx_feedbacks_group_id ON feedbacks(group_id);
-CREATE INDEX idx_feedbacks_teacher_id ON feedbacks(teacher_id);
-CREATE INDEX idx_feedbacks_provided_at ON feedbacks(provided_at);
-CREATE INDEX idx_feedbacks_grade ON feedbacks(grade);

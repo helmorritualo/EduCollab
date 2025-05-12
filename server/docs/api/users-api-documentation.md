@@ -14,6 +14,8 @@ Base URL: `http://localhost:5000`
 
 **Controller Function:** `getAllUsers`
 
+**Authentication Required:** Yes (Admin only)
+
 **Parameters:** None
 
 **Response:**
@@ -51,15 +53,15 @@ Base URL: `http://localhost:5000`
 
 ### 2. Get User Profile
 
-**Description:** Retrieves a specific user's profile information.
+**Description:** Retrieves the authenticated user's profile information.
 
-**Endpoint:** `GET /api/profile/:user_id`
+**Endpoint:** `GET /api/profile`
 
 **Controller Function:** `getUserProfile`
 
-**Parameters:**
+**Authentication Required:** Yes (Bearer Token)
 
-- `user_id` (URL parameter): The ID of the user to retrieve
+**Parameters:** None
 
 **Response:**
 
@@ -85,15 +87,16 @@ Base URL: `http://localhost:5000`
 
 ### 3. Update User Profile
 
-**Description:** Updates a user's profile information.
+**Description:** Updates the authenticated user's profile information.
 
-**Endpoint:** `PUT /api/profile/:user_id`
+**Endpoint:** `PUT /api/profile`
 
 **Controller Function:** `updateUserProfile`
 
+**Authentication Required:** Yes (Bearer Token)
+
 **Parameters:**
 
-- `user_id` (URL parameter): The ID of the user to update
 - Request Body: JSON object containing user data to update
 
 **Request Body Example:**
@@ -132,15 +135,16 @@ Base URL: `http://localhost:5000`
 
 ### 4. Update User Password
 
-**Description:** Updates a user's password.
+**Description:** Updates the authenticated user's password.
 
-**Endpoint:** `PUT /api/user/:user_id/change-password`
+**Endpoint:** `PUT /api/user/change-password`
 
 **Controller Function:** `updateUserPassword`
 
+**Authentication Required:** Yes (Bearer Token)
+
 **Parameters:**
 
-- `user_id` (URL parameter): The ID of the user whose password to update
 - Request Body:
 
 ```json

@@ -159,6 +159,8 @@ Authorization: Bearer <token>
 
 **Authentication Required:** Yes (Bearer Token)
 
+**Authorization:** Only the group creator or an admin can update a group
+
 **Parameters:**
 
 - `group_id` (URL parameter): The ID of the group to update
@@ -190,7 +192,7 @@ Authorization: Bearer <token>
 }
 ```
 
-**Status Code:** 201 Created
+**Status Code:** 200 OK
 
 ---
 

@@ -1,10 +1,12 @@
 # File Upload API Documentation
 
+Base URL: `http://localhost:5000`
+
 ## Upload a File
 
-Upload a file to a specific group. Only PDF and DOC files are allowed.
+Upload a file to a specific group. Only PDF and DOC files are allowed. Maximum file size is 5MB.
 
-- **URL:** `/files`
+- **URL:** `/api/files`
 - **Method:** `POST`
 - **Auth Required:** Yes
 - **Content-Type:** `multipart/form-data`
@@ -54,7 +56,7 @@ Upload a file to a specific group. Only PDF and DOC files are allowed.
 
 Retrieve all files uploaded to a specific group.
 
-- **URL:** `/files/group/:groupId`
+- **URL:** `/api/files/group/:groupId`
 - **Method:** `GET`
 - **Auth Required:** Yes
 
@@ -93,7 +95,7 @@ Retrieve all files uploaded to a specific group.
 
 Retrieve all files uploaded across all groups.
 
-- **URL:** `/files/all`
+- **URL:** `/api/files/all`
 - **Method:** `GET`
 - **Auth Required:** Yes (Admin only)
 
@@ -113,11 +115,61 @@ Retrieve all files uploaded across all groups.
 }
 ```
 
+## Get Files by Task
+
+Retrieve all files uploaded for a specific task.
+
+- **URL:** `/api/files/task/:taskId`
+- **Method:** `GET`
+- **Auth Required:** Yes
+
+### Success Response
+
+- **Code:** 200
+- **Content:**
+
+```json
+{
+  "success": true,
+  "files": [
+    {
+      "file_id": 123,
+      "filename": "1683472444-document.pdf",
+      "original_filename": "document.pdf",
+      "file_type": "application/pdf",
+      "file_size": 1024576,
+      "task_id": 1,
+      "group_id": 1,
+      "uploaded_by": 1,
+      "uploaded_at": "2025-05-07T10:00:44Z",
+      "uploader": {
+        "username": "john_doe",
+        "full_name": "John Doe"
+      },
+      "group": {
+        "name": "Study Group A"
+      }
+    }
+  ]
+}
+```
+
+### Error Response
+
+- **Code:** 404 NOT FOUND
+
+```json
+{
+  "success": false,
+  "message": "Task not found"
+}
+```
+
 ## Download File
 
 Download a specific file.
 
-- **URL:** `/files/:fileId/download`
+- **URL:** `/api/files/:fileId/download`
 - **Method:** `GET`
 - **Auth Required:** Yes
 

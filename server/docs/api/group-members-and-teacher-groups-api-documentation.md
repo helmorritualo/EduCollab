@@ -60,7 +60,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 1. Leave Group
+### 2. Leave Group
 
 **Description:** Allows a user to leave a group.
 
@@ -87,7 +87,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 2. List User Groups
+### 3. List User Groups
 
 **Description:** Retrieves all groups that the authenticated user is a member of.
 
@@ -120,7 +120,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 3. Get Group Details
+### 4. Get Group Details
 
 **Description:** Retrieves detailed information about a specific group, including its members.
 

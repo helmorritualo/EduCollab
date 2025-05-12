@@ -289,7 +289,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 7. Get Tasks By User ID
+### 7. Get My Tasks
 
 **Description:** Retrieves all tasks assigned to the authenticated user.
 
@@ -306,34 +306,18 @@ Authorization: Bearer <token>
   "success": true,
   "tasks": [
     {
-      "task_id": 3,
-      "title": "Design Database Schema",
-      "description": "Create ERD and implement database schema",
+      "task_id": 1,
+      "title": "Complete Project Documentation",
+      "description": "Write comprehensive documentation for the project",
       "status": "pending",
-      "due_date": "2023-12-10T23:59:59.999Z",
-      "group_id": 2,
-      "created_by": 1,
-      "assigned_to": 2,
-      "created_at": "2023-11-18T09:00:00.000Z",
-      "updated_at": "2023-11-18T09:00:00.000Z",
-      "creator_name": "Admin User",
-      "assignee_name": "John Doe",
-      "group_name": "Database Team"
-    },
-    {
-      "task_id": 5,
-      "title": "Create API Documentation",
-      "description": "Document all API endpoints",
-      "status": "in_progress",
-      "due_date": "2023-12-05T23:59:59.999Z",
-      "group_id": 3,
-      "created_by": 3,
-      "assigned_to": 2,
-      "created_at": "2023-11-20T13:45:00.000Z",
-      "updated_at": "2023-11-21T10:30:00.000Z",
+      "due_date": "2023-12-31T23:59:59.999Z",
+      "created_at": "2023-06-01T10:00:00.000Z",
+      "group_id": 1,
+      "created_by": 2,
+      "assigned_to": 3,
+      "group_name": "Math Study Group",
       "creator_name": "Jane Smith",
-      "assignee_name": "John Doe",
-      "group_name": "Documentation Team"
+      "assignee_name": "John Doe"
     }
   ]
 }
@@ -345,7 +329,7 @@ Authorization: Bearer <token>
 
 ### 8. Get All Tasks
 
-**Description:** Retrieves all tasks in the system. Typically used by administrators.
+**Description:** Retrieves all tasks in the system (admin only).
 
 **Endpoint:** `GET /api/tasks`
 
