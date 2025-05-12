@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 
 const AdminTasks = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const queryClient = useQueryClient();
 
   const { data: tasks = [], isLoading } = useQuery({
@@ -74,12 +75,19 @@ const AdminTasks = () => {
     }
   };
 
-  const filteredTasks = tasks.filter(
-    (task: TaskWithDetails) =>
+  const filteredTasks = tasks.filter((task: TaskWithDetails) => {
+    const matchesSearch =
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.creator_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      task.creator_name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Status filtering that handles both case and formatting differences
+    const matchesStatus = 
+      statusFilter === "all" || 
+      task.status.toLowerCase().replace("_", " ") === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="p-6">
@@ -87,7 +95,7 @@ const AdminTasks = () => {
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
           Task Management
         </h1>
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
           <div className="flex-1">
             <div className="relative">
               <Search
@@ -102,6 +110,19 @@ const AdminTasks = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Task Status</option>
+              <option value="pending">Pending</option>
+              <option value="in progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
         </div>
       </div>
@@ -123,6 +144,7 @@ const AdminTasks = () => {
               task={task}
               onStatusChange={handleStatusChange}
               onDelete={handleDelete}
+              onFileUpload={() => queryClient.invalidateQueries({ queryKey: ["allTasks"] })}
               showActions={false}
             />
           ))}

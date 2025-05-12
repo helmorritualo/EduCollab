@@ -4,15 +4,21 @@ import {
   getFilesByGroup,
   getAllFiles,
   downloadFile,
+  getFilesByTask,
 } from "./fileUpload.controller";
 import { requireAdmin, authenticate } from "@/middlewares/authentication";
-import { fileUploadMiddleware } from "@/middlewares/file-upload";
 
-const fileUploadRoutes = new Hono()
-  // File upload routes
-  .post("/files", authenticate, fileUploadMiddleware, uploadFile)
-  .get("/files/group/:groupId", authenticate, getFilesByGroup)
-  .get("/files/all", authenticate, requireAdmin, getAllFiles)
-  .get("/files/:fileId/download", authenticate, downloadFile);
+// Create a new Hono app for file upload routes
+const fileUploadRoutes = new Hono();
+
+// Define routes with clear middleware ordering
+// For file uploads, we use the built-in multipart parsing in Hono
+fileUploadRoutes.post("/files", authenticate, uploadFile);
+
+// Other file routes
+fileUploadRoutes.get("/files/group/:groupId", authenticate, getFilesByGroup);
+fileUploadRoutes.get("/files/task/:taskId", authenticate, getFilesByTask);
+fileUploadRoutes.get("/files/all", authenticate, requireAdmin, getAllFiles);
+fileUploadRoutes.get("/files/:fileId/download", authenticate, downloadFile);
 
 export default fileUploadRoutes;

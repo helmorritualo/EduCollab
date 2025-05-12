@@ -38,14 +38,27 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+    
+    // Ensure headers object exists
+    config.headers = config.headers || {};
+    
     if (token) {
+      // Always set Authorization header regardless of content type
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    if (!(config.data instanceof FormData)) {
-      config.headers["Content-Type"] = "application/json";
-    } else {
+    // Handle Content-Type for different request types
+    if (config.data instanceof FormData) {
+      // For FormData, let the browser set the Content-Type with boundary
       delete config.headers["Content-Type"];
+      
+      // Make sure Authorization header is preserved for FormData
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } else {
+      // For JSON data
+      config.headers["Content-Type"] = "application/json";
     }
 
     return config;
@@ -296,22 +309,66 @@ export const groupAPI = {
 
 export const fileAPI = {
   uploadFile: async (
-    file: File,
+    file: File | null,
     groupId: number,
     taskId?: number
-  ): Promise<number> => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("groupId", groupId.toString());
-    if (taskId) {
-      formData.append("taskId", taskId.toString());
-    }
+  ): Promise<number | null> => {
+    try {
+      // If no file provided, return null early
+      if (!file) {
+        console.log('No file provided for upload');
+        return null;
+      }
 
-    const response = await api.post<ApiResponse<void>>("/api/files", formData);
-    if (!response.data.success || response.data.file_id === undefined) {
-      throw new Error(response.data.message || "Failed to upload file");
+      // Validate file before uploading
+      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB limit
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      
+      if (file.size > maxSizeInBytes) {
+        throw new Error(`File size exceeds limit of 5MB. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+      }
+      
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(`Invalid file type: ${file.type}. Only PDF and Word documents are allowed.`);
+      }
+
+      // Create form data
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("groupId", groupId.toString());
+      if (taskId !== undefined) {
+        formData.append("taskId", taskId.toString());
+      }
+
+      console.log(`Uploading file: ${file.name}, size: ${(file.size / 1024).toFixed(2)}KB, type: ${file.type}`);
+      
+      // Use the pre-configured API instance which handles auth headers automatically
+      const response = await api.post<ApiResponse<{file_id: number}>>("/api/files", formData, {
+        // Let the browser set the content type with proper boundary
+        headers: {
+          'Content-Type': 'multipart/form-data' // Updated to explicitly set content type
+        },
+        // Track upload progress (helpful for larger files)
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || file.size));
+          console.log(`Upload progress: ${percentCompleted}%`);
+        }
+      });
+
+      // Check response
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to upload file");
+      }
+
+      console.log('File upload successful with ID:', response.data.file_id);
+      return response.data.file_id ?? null;
+    } catch (error) {
+      console.error('File upload error:', error);
+      if (error instanceof Error) {
+        throw new Error(`File upload failed: ${error.message}`);
+      }
+      throw new Error("Failed to upload file");
     }
-    return response.data.file_id;
   },
 
   getGroupFiles: async (groupId: number): Promise<FileUpload[]> => {
@@ -321,68 +378,231 @@ export const fileAPI = {
     return response.data.files || [];
   },
 
+  getTaskFiles: async (taskId: number): Promise<FileUpload[]> => {
+    const response = await api.get<ApiResponse<void>>(`/api/files/task/${taskId}`);
+    return response.data.files || [];
+  },
+
   getAllFiles: async (): Promise<FileUpload[]> => {
     const response = await api.get<ApiResponse<void>>("/api/files/all");
     return response.data.files || [];
   },
 
   downloadFile: async (fileId: number): Promise<void> => {
-    const response = await api.get(`/api/files/${fileId}/download`, {
-      responseType: "blob",
-    });
+    try {
+      console.log(`Downloading file with ID: ${fileId}`);
+      
+      const response = await api.get(`/api/files/${fileId}/download`, {
+        responseType: "blob",
+      });
 
-    // Create blob link to download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
+      // Get the content type from the response
+      const contentType = response.headers["content-type"] || "application/octet-stream";
+      console.log(`Content-Type from server: ${contentType}`);
 
-    // Extract filename from Content-Disposition header if available
-    const contentDisposition = response.headers["content-disposition"];
-    const filename = contentDisposition
-      ? contentDisposition.split("filename=")[1].replace(/"/g, "")
-      : `file-${fileId}`;
+      // Create a blob with the correct content type
+      const blob = new Blob([response.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement("a");
+      link.href = url;
 
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+      // Extract filename from Content-Disposition header if available
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = `file-${fileId}`;
+      
+      if (contentDisposition) {
+        // Parse the content-disposition header properly
+        const filenameMatch = contentDisposition.match(/filename="(.+?)"/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1]);
+          console.log(`Extracted filename: ${filename}`);
+        }
+      }
+
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      throw new Error('Failed to download file. Please try again.');
+    }
   },
+
+  // Use this new method name for clarity and consistency
+  downloadTaskFile: async (fileId: number): Promise<void> => {
+    try {
+      console.log(`Downloading task file with ID: ${fileId}`);
+      
+      // First attempt to get file info to retrieve original_filename
+      let originalFilename = '';
+      try {
+        // Get file details first - this is the most reliable way to get the original filename
+        const filesResponse = await api.get(`/api/files/${fileId}`);
+        if (filesResponse?.data?.data?.original_filename) {
+          originalFilename = filesResponse.data.data.original_filename;
+          console.log(`Got original filename from file data: ${originalFilename}`);
+        }
+      } catch (fileInfoError) {
+        console.warn('Could not retrieve file info, will fall back to content-disposition header', fileInfoError);
+      }
+
+      // Call directly to the API instead of creating a circular reference
+      const response = await api.get(`/api/files/${fileId}/download`, {
+        responseType: "blob",
+      });
+
+      // Get the content type from the response
+      const contentType = response.headers["content-type"] || "application/octet-stream";
+      console.log(`Content-Type from server: ${contentType}`);
+
+      // Create a blob with the correct content type
+      const blob = new Blob([response.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Use the original filename if we already have it, otherwise try to extract it from headers
+      let filename = originalFilename || `file-${fileId}`;
+      
+      // Extract filename from Content-Disposition header if we didn't get it from file info
+      if (!originalFilename) {
+        const contentDisposition = response.headers["content-disposition"];
+        if (contentDisposition) {
+          // Parse the content-disposition header properly
+          const filenameMatch = contentDisposition.match(/filename="(.+?)"/i);
+          if (filenameMatch && filenameMatch[1]) {
+            const headerFilename = decodeURIComponent(filenameMatch[1]);
+            // Only use the header filename if it's not the generic 'file.pdf'
+            if (headerFilename && headerFilename !== 'file.pdf') {
+              filename = headerFilename;
+            }
+            console.log(`Extracted filename from header: ${headerFilename}`);
+          }
+        }
+      }
+
+      console.log(`Using filename for download: ${filename}`);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading task file:', error);
+      throw new Error('Failed to download file. Please try again.');
+    }
+  }
 };
 
 export const taskAPI = {
+  getTaskById: async (taskId: number): Promise<TaskWithDetails> => {
+    try {
+      const response = await api.get<ApiResponse<{ task: TaskWithDetails }>>(`/api/tasks/${taskId}`);
+      
+      if (!response.data.success || !response.data.task) {
+        throw new Error(response.data.message || 'Failed to fetch task details');
+      }
+      
+      return response.data.task;
+    } catch (error) {
+      console.error('Error fetching task details:', error);
+      throw error;
+    }
+  },
+
   createTask: async (data: {
     title: string;
     description: string;
     due_date: string;
     group_id: number;
-    file?: File;
   }): Promise<number> => {
     try {
-      const { file, ...taskData } = data;
+      // Verify we have all required data before proceeding
+      if (!data.title || !data.description || !data.due_date || !data.group_id) {
+        console.error('Missing required fields in task data:', data);
+        throw new Error('All fields are required: title, description, due_date, and group_id');
+      }
+      
+      console.log('Task creation input data:', data);
+      
+      // Create a clean object with only the required properties and proper types
+      const taskData = {
+        title: data.title.trim(),
+        description: data.description.trim(),
+        due_date: data.due_date,
+        group_id: Number(data.group_id), // Ensure it's a number
+        status: "pending" // Set status to pending by default
+      };
+
+      console.log('Sending task data:', JSON.stringify(taskData));
+
+      // Use the axios instance instead of fetch to maintain consistency
       const response = await api.post<ApiResponse<{ task_id: number }>>(
         "/api/tasks",
-        {
-          ...taskData,
-          status: "pending", // Always start with pending status
-        }
+        taskData
       );
+
+      console.log('Task creation response:', response.data);
+      
+      if (!response.data.success) {
+        console.error('Server error response:', response.data);
+        throw new Error(response.data.message || "Failed to create task");
+      }
 
       if (!response.data.task_id) {
         throw new Error("Failed to create task: No task ID returned");
       }
 
-      // If there's a file, upload it and associate it with the task
-      if (file) {
-        await fileAPI.uploadFile(file, data.group_id, response.data.task_id);
-      }
-
       return response.data.task_id;
     } catch (error) {
+      console.error('Task creation error:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }
       throw new Error("Failed to create task");
+    }
+  },
+
+  /**
+   * Upload multiple files for a task
+   * @param taskId - The task ID to associate files with
+   * @param files - Array of files to upload
+   * @param groupId - The group ID the task belongs to
+   * @returns True if all files were uploaded successfully
+   */
+  uploadTaskFiles: async (taskId: number, files: File[], groupId: number): Promise<boolean> => {
+    try {
+      // If no files, return success immediately
+      if (files.length === 0) return true;
+      
+      console.log(`Starting upload of ${files.length} files for task ${taskId} in group ${groupId}`);
+      
+      // Upload files one by one to ensure each upload succeeds
+      const uploadPromises = files.map(file => 
+        fileAPI.uploadFile(file, groupId, taskId)
+          .catch(error => {
+            console.error(`Error uploading file ${file.name}:`, error);
+            throw error; // Re-throw to be caught by Promise.all
+          })
+      );
+      
+      // Wait for all uploads to complete
+      await Promise.all(uploadPromises);
+      
+      console.log(`Successfully uploaded ${files.length} files for task ${taskId}`);
+      return true;
+    } catch (error) {
+      console.error('Task files upload error:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to upload task files: ${error.message}`);
+      }
+      throw new Error("Failed to upload task files");
     }
   },
 
@@ -395,30 +615,67 @@ export const taskAPI = {
       due_date: string;
       group_id: number;
       assigned_to?: number;
-      file?: File;
     }
   ): Promise<boolean> => {
-    const { file, ...taskData } = data;
-    const response = await api.put<ApiResponse<void>>(
-      `/api/tasks/${taskId}`,
-      taskData
-    );
-    // If there's a file, upload it and associate it with the task
-    if (file) {
-      await fileAPI.uploadFile(file, data.group_id, taskId);
+    try {
+      // Verify we have all required data before proceeding
+      if (!data.title || !data.description || !data.status || !data.due_date || !data.group_id) {
+        throw new Error('All fields are required: title, description, status, due_date, and group_id');
+      }
+      
+      // Create a clean task data object with proper types
+      const taskData = {
+        title: data.title.trim(),
+        description: data.description.trim(),
+        status: data.status,
+        due_date: data.due_date,
+        group_id: Number(data.group_id),
+        assigned_to: data.assigned_to
+      };
+
+      // Update the task using JSON
+      const response = await api.put<ApiResponse<{ success: boolean }>>(
+        `/api/tasks/${taskId}`,
+        taskData
+      );
+      
+      if (!response.data.success) {
+        throw new Error("Failed to update task");
+      }
+
+      return response.data.success === true;
+    } catch (error) {
+      console.error('Task update error:', error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Failed to update task");
     }
-    return response.data.success;
   },
 
   updateTaskStatus: async (
     taskId: number,
     status: string
   ): Promise<boolean> => {
-    const response = await api.patch<ApiResponse<void>>(
-      `/api/tasks/${taskId}/status`,
-      { status }
-    );
-    return response.data.success;
+    try {
+      // Send as JSON data instead of FormData
+      const response = await api.patch<ApiResponse<{ success: boolean }>>(
+        `/api/tasks/${taskId}/status`,
+        { status }
+      );
+
+      if (!response.data.success) {
+        throw new Error("Failed to update task status");
+      }
+
+      return response.data.success === true;
+    } catch (error) {
+      console.error('Task status update error:', error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Failed to update task status");
+    }
   },
 
   deleteTask: async (taskId: number): Promise<boolean> => {
@@ -428,13 +685,7 @@ export const taskAPI = {
     return response.data.success;
   },
 
-  getTaskById: async (taskId: number) => {
-    const response = await api.get<ApiResponse<{ task: TaskWithDetails }>>(
-      `/api/tasks/${taskId}`
-    );
-    if (!response.data.task) throw new Error("Task not found");
-    return response.data.task;
-  },
+  // getTaskById method is defined earlier in the file
 
   getTasksByGroupId: async (groupId: number) => {
     const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(

@@ -1,32 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import { TaskWithDetails } from "@/types";
 
-interface CreateTaskModalProps {
+interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: {
+    task_id: number;
     title: string;
     description: string;
     due_date: string;
     group_id: number;
   }) => void;
-  selectedGroup?: number;
+  task: TaskWithDetails | null;
   groups?: { group_id: number; name: string }[];
 }
 
-const CreateTaskModal = ({
+const EditTaskModal = ({
   isOpen,
   onClose,
   onSubmit,
-  selectedGroup,
+  task,
   groups = [],
-}: CreateTaskModalProps) => {
+}: EditTaskModalProps) => {
   const [formData, setFormData] = useState({
+    task_id: 0,
     title: "",
     description: "",
     due_date: "",
-    group_id: selectedGroup || "" as number | "",
+    group_id: 0,
+    status: "pending",
   });
+
+  // Update form data when task changes
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        task_id: Number(task.task_id),  // Ensure this is a number
+        title: task.title,
+        description: task.description,
+        due_date: task.due_date ? task.due_date.split('T')[0] : "",
+        group_id: Number(task.group_id), // Ensure this is a number
+        status: task.status || 'pending',
+      });
+    }
+  }, [task]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -36,11 +54,9 @@ const CreateTaskModal = ({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "group_id" ? (value ? parseInt(value) : "") : value,
+      [name]: name === "group_id" ? (value ? parseInt(value) : 0) : value,
     }));
   };
-
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,26 +69,24 @@ const CreateTaskModal = ({
       return;
     }
 
+    // Submit only the required fields (excluding status)
     onSubmit({
-      ...formData,
-      group_id: formData.group_id as number,
-    });
-    setFormData({
-      title: "",
-      description: "",
-      due_date: "",
-      group_id: selectedGroup || "" as number | "",
+      task_id: formData.task_id,
+      title: formData.title,
+      description: formData.description,
+      due_date: formData.due_date,
+      group_id: Number(formData.group_id),
     });
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !task) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg w-full max-w-2xl shadow-xl">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Create New Task</h2>
-          <p className="text-sm text-gray-500 mt-1">Create a new task for your group</p>
+          <h2 className="text-xl font-semibold text-gray-800">Edit Task</h2>
+          <p className="text-sm text-gray-500 mt-1">Update task details</p>
         </div>
         
         <form onSubmit={handleSubmit} className="p-6">
@@ -140,7 +154,7 @@ const CreateTaskModal = ({
                 required
               />
             </div>
-            
+
 
           </div>
           
@@ -156,7 +170,7 @@ const CreateTaskModal = ({
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Create Task
+              Update Task
             </button>
           </div>
         </form>
@@ -165,4 +179,4 @@ const CreateTaskModal = ({
   );
 };
 
-export default CreateTaskModal;
+export default EditTaskModal;

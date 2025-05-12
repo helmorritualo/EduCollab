@@ -4,14 +4,19 @@ import { taskAPI, groupAPI } from "@/services/api.service";
 import { Search, Plus } from "lucide-react";
 import TaskCard from "@/components/tasks/TaskCard";
 import CreateTaskModal from "@/components/tasks/CreateTaskModal";
+import EditTaskModal from "@/components/tasks/EditTaskModal";
 import { Group, TaskWithDetails } from "@/types";
 import Swal from "sweetalert2";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TeacherTasks = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: groups = [] } = useQuery<Group[]>({
     queryKey: ["teacherGroups"],
@@ -88,11 +93,52 @@ const TeacherTasks = () => {
     },
   });
 
+  const updateTaskMutation = useMutation({
+    mutationFn: (data: {
+      task_id: number;
+      title: string;
+      description: string;
+      status: string;
+      due_date: string;
+      group_id: number;
+    }) => taskAPI.updateTask(data.task_id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacherTasks"] });
+      setShowEditForm(false);
+      setSelectedTask(null);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Task updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Failed to update task",
+      });
+    },
+  });
+
   const handleStatusChange = (taskId: number, newStatus: string) => {
     updateTaskStatusMutation.mutate({ taskId, status: newStatus });
   };
 
   const handleDelete = async (taskId: number) => {
+    // Find the task to check if current user is the creator
+    const taskToDelete = tasks.find(task => task.task_id === taskId);
+    
+    // Only allow deletion if current user is the creator of the task
+    if (!taskToDelete || !user || taskToDelete.created_by !== user.user_id) {
+      Swal.fire({
+        icon: "error",
+        title: "Unauthorized",
+        text: "You can only delete tasks that you created.",
+      });
+      return;
+    }
+    
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -106,6 +152,21 @@ const TeacherTasks = () => {
     if (result.isConfirmed) {
       deleteTaskMutation.mutate(taskId);
     }
+  };
+
+  const handleEdit = (task: TaskWithDetails) => {
+    // Only allow editing if current user is the creator of the task
+    if (!user || task.created_by !== user.user_id) {
+      Swal.fire({
+        icon: "error",
+        title: "Unauthorized",
+        text: "You can only edit tasks that you created.",
+      });
+      return;
+    }
+    
+    setSelectedTask(task);
+    setShowEditForm(true);
   };
 
   const filteredTasks = tasks.filter((task: TaskWithDetails) => {
@@ -173,15 +234,25 @@ const TeacherTasks = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTasks.map((task: TaskWithDetails) => (
-            <TaskCard
-              key={task.task_id}
-              task={task}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDelete}
-              showActions={false}
-            />
-          ))}
+          {filteredTasks.map((task: TaskWithDetails) => {
+            // Only show edit and delete buttons if current user is the creator
+            // Convert to string first to handle different ID types (number vs string)
+            const currentUserId = user?.user_id?.toString();
+            const taskCreatorId = task.created_by?.toString();
+            const canModify = !!currentUserId && !!taskCreatorId && currentUserId === taskCreatorId;
+            
+            return (
+              <TaskCard
+                key={task.task_id}
+                task={task}
+                onStatusChange={handleStatusChange}
+                onDelete={canModify ? handleDelete : undefined}
+                onEdit={canModify ? handleEdit : undefined}
+                showActions={false}
+                onFileUpload={() => queryClient.invalidateQueries({ queryKey: ["teacherTasks"] })}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -190,6 +261,21 @@ const TeacherTasks = () => {
         onClose={() => setShowCreateForm(false)}
         onSubmit={createTaskMutation.mutate}
         selectedGroup={selectedGroup ? parseInt(selectedGroup) : undefined}
+        groups={groups}
+      />
+      
+      <EditTaskModal
+        isOpen={showEditForm}
+        onClose={() => setShowEditForm(false)}
+        onSubmit={(data) => {
+          // Add the status from the selected task or default to "pending"
+          const updatedData = {
+            ...data,
+            status: selectedTask?.status || "pending"
+          };
+          updateTaskMutation.mutate(updatedData);
+        }}
+        task={selectedTask}
         groups={groups}
       />
     </div>

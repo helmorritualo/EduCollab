@@ -141,7 +141,6 @@ CREATE TABLE feedbacks (
     group_id INT NOT NULL,
     teacher_id INT NOT NULL,
     comment TEXT,
-    grade INT,
     provided_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE

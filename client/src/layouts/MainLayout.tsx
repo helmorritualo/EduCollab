@@ -23,14 +23,12 @@ const MainLayout = () => {
   const location = useLocation();
 
   const studentNavigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Tasks", href: "/tasks", icon: ClipboardList },
     { name: "Progress", href: "/progress", icon: Ellipsis },
     { name: "Groups", href: "/groups", icon: Users },
   ];
 
   const teacherNavigation = [
-    { name: "Dashboard", href: "/teacher", icon: LayoutDashboard },
     { name: "Tasks", href: "/teacher/tasks", icon: ClipboardList },
     { name: "Groups", href: "/teacher/groups", icon: Users },
   ];

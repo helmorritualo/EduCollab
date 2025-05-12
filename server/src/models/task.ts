@@ -190,10 +190,10 @@ export const getTasksByUserId = async (
       JOIN group_members gm ON t.group_id = gm.group_id AND gm.user_id = ?
       LEFT JOIN task_assignments ta ON t.task_id = ta.task_id AND ta.user_id = ?
       LEFT JOIN files f ON f.task_id = t.task_id
-      WHERE gm.user_id = ? AND t.created_by != ?
+      WHERE gm.user_id = ?
       ORDER BY t.due_date ASC
     `;
-    const [result] = await conn.execute(sql, [userId, userId, userId, userId]);
+    const [result] = await conn.execute(sql, [userId, userId, userId]);
 
     // Transform the result to include file information and assignment status
     return (result as any[]).map((row) => ({

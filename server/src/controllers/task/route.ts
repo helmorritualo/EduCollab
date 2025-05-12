@@ -16,12 +16,15 @@ import {
   validateTaskStatusUpdate,
   validateTaskCreationAuthorization,
 } from "@/middlewares/task-validation";
+import { fileUploadMiddleware } from "@/middlewares/file-upload";
 
 const taskRoutes = new Hono()
   .get("/tasks/my-tasks", authenticate, getTasksByUserId)
   .post(
     "/tasks",
     authenticate,
+    // Skip file upload middleware for simple task creation without files
+    // fileUploadMiddleware, 
     validateTaskCreation,
     validateTaskCreationAuthorization,
     createTask

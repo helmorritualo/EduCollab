@@ -3,6 +3,12 @@ import { BadRequestError } from "@/utils/error";
 import * as fs from "fs";
 import * as path from "path";
 
+/**
+ * @deprecated This middleware is deprecated as file handling is now done directly in controllers.
+ * Kept for backward compatibility with any routes still using it.
+ * New file uploads should use the direct approach in fileUpload.controller.ts.
+ */
+
 const ALLOWED_TYPES = [
   "application/pdf",
   "application/msword",
@@ -10,13 +16,34 @@ const ALLOWED_TYPES = [
 ];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+/**
+ * @deprecated Use the direct file handling in controllers instead.
+ */
 export const fileUploadMiddleware = async (c: Context, next: Next) => {
   try {
-    const body = await c.req.parseBody();
-    const file = body.file as File;
+    console.log('WARNING: Using deprecated fileUploadMiddleware. Update to use direct file handling.');
+    
+    // Parse multipart form data
+    const formData = await c.req.formData();
+    console.log('File upload middleware parsed formData:', Array.from(formData.keys()));
+    
+    // Get the file object
+    const file = formData.get('file') as File | null;
+    
+    // Get other form values and store in context
+    const formValues: Record<string, any> = {};
+    for (const [key, value] of formData.entries()) {
+      if (key !== 'file') {
+        formValues[key] = value;
+      }
+    }
+    c.set('formValues', formValues);
 
-    if (!file || !(file instanceof File)) {
-      throw new BadRequestError("No file uploaded");
+    // If file is not present, continue without processing file
+    if (!file) {
+      console.log('No file in request, continuing to next middleware');
+      await next();
+      return;
     }
 
     // Validate file type
@@ -32,25 +59,17 @@ export const fileUploadMiddleware = async (c: Context, next: Next) => {
     }
 
     // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(__dirname, "../../uploads");
+    const uploadsDir = path.join(process.cwd(), "uploads");
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    // Generate unique filename
-    const tempFilename = `${Date.now()}-${file.name}`;
-    const tempPath = path.join(uploadsDir, tempFilename);
-
-    // Store file info in context for the controller
-    c.set("file", {
-      originalFilename: file.name,
-      mimetype: file.type,
-      size: file.size,
-      path: tempPath,
-    });
+    // Store file in context for the controller
+    c.set("file", file);
 
     await next();
   } catch (error) {
+    console.error('Error in file upload middleware:', error);
     throw error;
   }
 };

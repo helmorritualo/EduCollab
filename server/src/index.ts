@@ -4,11 +4,13 @@ import { Context, Next } from "hono";
 import { logger } from "hono/logger";
 import { jwt } from "hono/jwt";
 import { cors } from "hono/cors";
+import http from 'http';
 import type { JwtVariables } from "hono/jwt";
 import { errorHandlerMiddleware } from "./middlewares/error-handler";
 import { routes } from "./controllers/routes";
 import dotenv from "dotenv";
 import { secureHeaders } from "hono/secure-headers";
+import conn from './config/database';
 
 dotenv.config();
 
@@ -17,7 +19,7 @@ const app = new Hono<{ Variables: JwtVariables }>();
 //* middlewares
 app.use(logger());
 app.use("*", cors({
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", "http://localhost:1234"],
   allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
   exposeHeaders: ["Content-Length", "X-Kuma-Revision"],

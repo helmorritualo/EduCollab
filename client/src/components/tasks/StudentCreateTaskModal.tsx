@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Swal from "sweetalert2";
+import { Group } from "@/types";
 
-interface CreateTaskModalProps {
+interface StudentCreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: {
@@ -10,22 +10,20 @@ interface CreateTaskModalProps {
     due_date: string;
     group_id: number;
   }) => void;
-  selectedGroup?: number;
-  groups?: { group_id: number; name: string }[];
+  groups: Group[];
 }
 
-const CreateTaskModal = ({
+const StudentCreateTaskModal = ({
   isOpen,
   onClose,
   onSubmit,
-  selectedGroup,
   groups = [],
-}: CreateTaskModalProps) => {
+}: StudentCreateTaskModalProps) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     due_date: "",
-    group_id: selectedGroup || "" as number | "",
+    group_id: "" as number | "",
   });
 
   const handleChange = (
@@ -44,14 +42,6 @@ const CreateTaskModal = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.group_id) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Please select a group",
-      });
-      return;
-    }
 
     onSubmit({
       ...formData,
@@ -61,7 +51,7 @@ const CreateTaskModal = ({
       title: "",
       description: "",
       due_date: "",
-      group_id: selectedGroup || "" as number | "",
+      group_id: "" as number | "",
     });
   };
 
@@ -72,7 +62,7 @@ const CreateTaskModal = ({
       <div className="bg-white rounded-lg w-full max-w-2xl shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Create New Task</h2>
-          <p className="text-sm text-gray-500 mt-1">Create a new task for your group</p>
+          <p className="text-sm text-gray-500 mt-1">Share your task with your group</p>
         </div>
         
         <form onSubmit={handleSubmit} className="p-6">
@@ -165,4 +155,4 @@ const CreateTaskModal = ({
   );
 };
 
-export default CreateTaskModal;
+export default StudentCreateTaskModal;
