@@ -1,16 +1,29 @@
 # EduCollab System
 
-EduCollab System is a full-stack application designed to facilitate educational collaboration. This repository contains both the client and server components of the application.
-This project is under development. 
+<div align="center">
 
-## Project Overview
+**A modern educational collaboration platform for students and teachers**
+
+</div>
+
+## 📋 Overview
+
+EduCollab is a comprehensive full-stack application designed to facilitate educational collaboration between teachers and students. The platform enables task management, file sharing, and communication in a structured educational environment.
+
+**Key Features:**
+- Task creation and assignment
+- File upload/download for educational materials
+- Collaborative workspaces
+- User role management (teachers, students, administrators)
+
+## 🔍 Project Structure
 
 The EduCollab System consists of:
 
 - **Client**: A React + TypeScript frontend built with Vite
 - **Server**: A Node.js backend using Hono framework with MySQL database
 
-## Prerequisites
+## 🛠️ Prerequisites
 
 Before setting up the project, ensure you have the following installed:
 
@@ -19,15 +32,26 @@ Before setting up the project, ensure you have the following installed:
 - MySQL (v8 or higher)
 - Git
 
-## Getting Started
+## 🚀 Getting Started
 
-### Cloning the Repository
+Follow these steps to set up the EduCollab System on your local machine.
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/helmorritualo/EduCollab.git
 ```
 
-## Server Setup
+### 2. Database Setup
+
+1. Install MySQL if you haven't already
+2. Create a new database named `educallab`
+3. Import the provided schema:
+   ```bash
+   mysql -u your_username -p educallab < database/schema.sql
+   ```
+
+### 3. Server Setup
 
 ```bash
 # Navigate to the server directory
@@ -36,25 +60,28 @@ cd server
 # Install dependencies
 npm install
 
-# Create a .env file (if not exists) with the following variables
-# DB_HOST=localhost
-# DB_PORT=your_db_port
-# DB_USER=your_db_user
-# DB_PASSWORD= your_db_password
-# DB_NAME=educallab
-# JWT_SECRET=your_jwt_secret
-# PORT=5000
+# Create a .env file with the following variables:
+```
 
-# Set up the database
-# Import the schema from database/schema.sql to your MySQL instance
+Create a `.env` file in the server directory with these configurations:
+```
+DB_HOST=localhost // for local development using xampp
+DB_PORT=3306 // default port for xampp
+DB_USER=root  // default username for xampp
+DB_PASSWORD= // default password for xampp
+DB_NAME=educallab // database name
+JWT_SECRET=your_jwt_secret_key 
+PORT=5000 // default port for development server
+```
 
+```bash
 # Start the development server
 npm run dev
 ```
 
-The server will be running at http://localhost:5000
+The server will run at http://localhost:5000
 
-## Client Setup
+### 4. Client Setup
 
 ```bash
 # Navigate to the client directory
@@ -67,37 +94,34 @@ npm install
 npm run dev
 ```
 
-The client will be running at http://localhost:3000
+The client will run at http://localhost:3000
 
-## Development
-
-### Server
-
-- Built with Hono.js framework
-- Uses MySQL for database
-- TypeScript for type safety
-
-### Client
-
-- Built with React 19
-- Uses TypeScript
-- Vite for fast development experience
-- Tailwind CSS for styling
-
-## Building for Production
+## 💻 Development
 
 ### Server
 
-```bash
-cd server
-npm run build
-```
+- **Framework**: Hono.js
+- **Database**: MySQL
+- **Language**: TypeScript
+- **API**: RESTful API endpoints for data access
+- **File System**: Handles PDF and document files for educational tasks
 
 ### Client
 
-```bash
-cd client
-npm run build
-```
+- **Framework**: React 19
+- **Language**: TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API
+- **File Handling**: Supports uploading and downloading educational materials
 
-The built client files will be in the `client/dist` directory, which can be served by any static file server.
+## 👥 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
