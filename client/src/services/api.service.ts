@@ -28,7 +28,7 @@ interface ApiResponse<T> {
 }
 
 // Use environment variable or fallback to default
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -100,7 +100,7 @@ api.interceptors.response.use(
         if (token) {
           // Call refresh token endpoint
           const refreshResponse = await api.post(
-            "/api/refresh-token",
+            "/refresh-token",
             {},
             {
               headers: {
@@ -151,7 +151,7 @@ export { subscriptionAPI } from './subscription.service';
 
 export const profileAPI = {
   getUserProfile: async () => {
-    const response = await api.get(`/api/profile`);
+    const response = await api.get(`/profile`);
     return response.data;
   },
   updateUserProfile: async (data: {
@@ -161,7 +161,7 @@ export const profileAPI = {
     phone_number?: string;
     gender?: string;
   }) => {
-    const response = await api.put(`/api/profile`, data);
+    const response = await api.put(`/profile`, data);
     return response.data;
   },
 };
@@ -171,32 +171,32 @@ export const userAPI = {
     oldPassword: string;
     newPassword: string;
   }) => {
-    const response = await api.put(`/api/user/change-password`, data);
+    const response = await api.put(`/user/change-password`, data);
     return response.data;
   },
   getAllUsers: async () => {
-    const response = await api.get(`/api/users`);
+    const response = await api.get(`/users`);
     return response.data;
   },
   activateUser: async (userId: number) => {
-    const response = await api.put(`/api/user/activate/${userId}`);
+    const response = await api.put(`/user/activate/${userId}`);
     return response.data;
   },
   deactivateUser: async (userId: number) => {
-    const response = await api.put(`/api/user/deactivate/${userId}`);
+    const response = await api.put(`/user/deactivate/${userId}`);
     return response.data;
   },
 };
 
 export const groupAPI = {
   getAllGroups: async (): Promise<Group[]> => {
-    const response = await api.get<ApiResponse<Group[]>>("/api/groups");
+    const response = await api.get<ApiResponse<Group[]>>("/groups");
     return response.data.groups || [];
   },
 
   getGroupById: async (groupId: number): Promise<Group> => {
     const response = await api.get<ApiResponse<Group>>(
-      `/api/groups/${groupId}`
+      `/groups/${groupId}`
     );
     if (!response.data.group) throw new Error("Group not found");
     return response.data.group;
@@ -206,7 +206,7 @@ export const groupAPI = {
     name: string;
     description: string;
   }): Promise<Group> => {
-    const response = await api.post<ApiResponse<Group>>("/api/groups", data);
+    const response = await api.post<ApiResponse<Group>>("/groups", data);
     if (!response.data.group) throw new Error("Failed to create group");
     return response.data.group;
   },
@@ -216,7 +216,7 @@ export const groupAPI = {
     data: { name?: string; description?: string }
   ): Promise<Group> => {
     const response = await api.put<ApiResponse<Group>>(
-      `/api/groups/${groupId}`,
+      `/groups/${groupId}`,
       data
     );
     if (!response.data.group) throw new Error("Failed to update group");
@@ -225,14 +225,14 @@ export const groupAPI = {
 
   deleteGroup: async (groupId: number): Promise<boolean> => {
     const response = await api.delete<ApiResponse<void>>(
-      `/api/groups/${groupId}`
+      `/groups/${groupId}`
     );
     return response.data.success;
   },
 
   joinGroup: async (data: { group_code: string }): Promise<boolean> => {
     const response = await api.post<ApiResponse<void>>(
-      "/api/groups/join",
+      "/groups/join",
       data
     );
     return response.data.success;
@@ -240,19 +240,19 @@ export const groupAPI = {
 
   leaveGroup: async (groupId: number): Promise<boolean> => {
     const response = await api.delete<ApiResponse<void>>(
-      `/api/groups/${groupId}/leave`
+      `/groups/${groupId}/leave`
     );
     return response.data.success;
   },
 
   listUserGroups: async (): Promise<Group[]> => {
-    const response = await api.get<ApiResponse<Group[]>>("/api/user/groups");
+    const response = await api.get<ApiResponse<Group[]>>("/user/groups");
     return response.data.groups || [];
   },
 
   getGroupDetails: async (groupId: number): Promise<GroupWithMembers> => {
     const response = await api.get<ApiResponse<GroupWithMembers>>(
-      `/api/groups/${groupId}/details`
+      `/groups/${groupId}/details`
     );
     if (!response.data.group) throw new Error("Group not found");
     return response.data.group;
@@ -266,7 +266,7 @@ export const groupAPI = {
     try {
       const response = await api.post<
         ApiResponse<{ invitation: TeacherInvitation }>
-      >("/api/teacher-group-invitations", data);
+      >("/teacher-group-invitations", data);
       if (!response.data.invitation)
         throw new Error("Failed to create invitation");
       return response.data.invitation;
@@ -283,7 +283,7 @@ export const groupAPI = {
     try {
       const response = await api.get<
         ApiResponse<{ invitations: TeacherInvitation[] }>
-      >("/api/teacher-group-invitations");
+      >("/teacher-group-invitations");
       return response.data.invitations || [];
     } catch (error) {
       if (
@@ -302,7 +302,7 @@ export const groupAPI = {
   ): Promise<boolean> => {
     try {
       const response = await api.patch<ApiResponse<void>>(
-        `/api/teacher-group-invitations/${invitationId}`,
+        `/teacher-group-invitations/${invitationId}`,
         data
       );
       return response.data.success;
@@ -351,7 +351,7 @@ export const fileAPI = {
       console.log(`Uploading file: ${file.name}, size: ${(file.size / 1024).toFixed(2)}KB, type: ${file.type}`);
       
       // Use the pre-configured API instance which handles auth headers automatically
-      const response = await api.post<ApiResponse<{file_id: number}>>("/api/files", formData, {
+      const response = await api.post<ApiResponse<{file_id: number}>>("/files", formData, {
         // Let the browser set the content type with proper boundary
         headers: {
           'Content-Type': 'multipart/form-data' // Updated to explicitly set content type
@@ -381,18 +381,18 @@ export const fileAPI = {
 
   getGroupFiles: async (groupId: number): Promise<FileUpload[]> => {
     const response = await api.get<ApiResponse<void>>(
-      `/api/files/group/${groupId}`
+      `/files/group/${groupId}`
     );
     return response.data.files || [];
   },
 
   getTaskFiles: async (taskId: number): Promise<FileUpload[]> => {
-    const response = await api.get<ApiResponse<void>>(`/api/files/task/${taskId}`);
+    const response = await api.get<ApiResponse<void>>(`/files/task/${taskId}`);
     return response.data.files || [];
   },
 
   getAllFiles: async (): Promise<FileUpload[]> => {
-    const response = await api.get<ApiResponse<void>>("/api/files/all");
+    const response = await api.get<ApiResponse<void>>("/files/all");
     return response.data.files || [];
   },
 
@@ -400,7 +400,7 @@ export const fileAPI = {
     try {
       console.log(`Downloading file with ID: ${fileId}`);
       
-      const response = await api.get(`/api/files/${fileId}/download`, {
+      const response = await api.get(`/files/${fileId}/download`, {
         responseType: "blob",
       });
 
@@ -449,7 +449,7 @@ export const fileAPI = {
       let originalFilename = '';
       try {
         // Get file details first - this is the most reliable way to get the original filename
-        const filesResponse = await api.get(`/api/files/${fileId}`);
+        const filesResponse = await api.get(`/files/${fileId}`);
         if (filesResponse?.data?.data?.original_filename) {
           originalFilename = filesResponse.data.data.original_filename;
           console.log(`Got original filename from file data: ${originalFilename}`);
@@ -459,7 +459,7 @@ export const fileAPI = {
       }
 
       // Call directly to the API instead of creating a circular reference
-      const response = await api.get(`/api/files/${fileId}/download`, {
+      const response = await api.get(`/files/${fileId}/download`, {
         responseType: "blob",
       });
 
@@ -513,7 +513,7 @@ export const fileAPI = {
 export const taskAPI = {
   getTaskById: async (taskId: number): Promise<TaskWithDetails> => {
     try {
-      const response = await api.get<ApiResponse<{ task: TaskWithDetails }>>(`/api/tasks/${taskId}`);
+      const response = await api.get<ApiResponse<{ task: TaskWithDetails }>>(`/tasks/${taskId}`);
       
       if (!response.data.success || !response.data.task) {
         throw new Error(response.data.message || 'Failed to fetch task details');
@@ -554,7 +554,7 @@ export const taskAPI = {
 
       // Use the axios instance instead of fetch to maintain consistency
       const response = await api.post<ApiResponse<{ task_id: number }>>(
-        "/api/tasks",
+        "/tasks",
         taskData
       );
 
@@ -638,7 +638,7 @@ export const taskAPI = {
 
       // Update the task using JSON
       const response = await api.put<ApiResponse<{ success: boolean }>>(
-        `/api/tasks/${taskId}`,
+        `/tasks/${taskId}`,
         taskData
       );
       
@@ -662,7 +662,7 @@ export const taskAPI = {
   ): Promise<boolean> => {
     try {
       const response = await api.patch<ApiResponse<{ success: boolean }>>(
-        `/api/tasks/${taskId}/status`,
+        `/tasks/${taskId}/status`,
         { status }
       );
 
@@ -682,28 +682,28 @@ export const taskAPI = {
 
   deleteTask: async (taskId: number): Promise<boolean> => {
     const response = await api.delete<ApiResponse<void>>(
-      `/api/tasks/${taskId}`
+      `/tasks/${taskId}`
     );
     return response.data.success;
   },
 
   getTasksByGroupId: async (groupId: number) => {
     const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(
-      `/api/groups/${groupId}/tasks`
+      `/groups/${groupId}/tasks`
     );
     return response.data.tasks || [];
   },
 
   getMyTasks: async () => {
     const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(
-      "/api/tasks/my-tasks"
+      "/tasks/my-tasks"
     );
     return response.data.tasks || [];
   },
 
   getAllTasks: async () => {
     const response = await api.get<ApiResponse<{ tasks: TaskWithDetails[] }>>(
-      "/api/tasks"
+      "/tasks"
     );
     return response.data.tasks || [];
   },

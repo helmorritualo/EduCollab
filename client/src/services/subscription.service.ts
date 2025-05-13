@@ -36,6 +36,25 @@ interface SubscriptionResponse {
 
 export const subscriptionAPI = {
   /**
+   * Get all subscriptions (admin only)
+   */
+  getAllSubscriptions: async (): Promise<Subscription[]> => {
+    try {
+      const response = await api.get('/subscription/admin/all');
+      
+      if (!response.data || !Array.isArray(response.data)) {
+        console.error('Invalid response format for subscriptions:', response.data);
+        return [];
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all subscriptions:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Create a new subscription with PayPal
    */
   createSubscription: async (userId: number, planId: string): Promise<{ subscriptionId: string; approvalUrl: string }> => {
