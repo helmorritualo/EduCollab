@@ -56,11 +56,14 @@ const SubscriptionPage = () => {
       // Redirect user to PayPal for payment
       if (response.approvalUrl) {
         // Save necessary subscription data to sessionStorage
+        const token = localStorage.getItem('token');
         const subscriptionData = {
           userId: user.user_id,
           planId: planId,
           subscriptionId: response.subscriptionId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          // Store the auth token to restore it after PayPal redirect
+          authToken: token
         };
         
         console.log('Storing subscription data in session:', subscriptionData);

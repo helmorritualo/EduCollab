@@ -9,6 +9,23 @@ const SubscriptionSuccessPage = () => {
   const [processing, setProcessing] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Immediately restore auth token if available - this should run before any API calls
+  useEffect(() => {
+    const pendingSubscriptionData = sessionStorage.getItem('pendingSubscription');
+    if (pendingSubscriptionData) {
+      try {
+        const data = JSON.parse(pendingSubscriptionData);
+        // If we have saved auth token, restore it
+        if (data.authToken) {
+          console.log('Restoring authentication token after PayPal redirect');
+          localStorage.setItem('token', data.authToken);
+        }
+      } catch (error) {
+        console.error('Error parsing pending subscription data:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Check if we've already processed this subscription to prevent duplicate processing
