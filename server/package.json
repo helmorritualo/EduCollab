@@ -5,8 +5,10 @@
   "description": "The server for the EduCallab app",
   "scripts": {
     "start": "tsx watch src/index.ts",
-    "dev": "nodemon dist/index.js",
-    "build": "tsc"
+    "dev": "tsx watch src/index.ts",
+    "dev:dist": "nodemon --exec tsx dist/index.js",
+    "build": "tsc",
+    "start:prod": "node --loader=tsx dist/index.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.0",
@@ -19,7 +21,10 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^20.11.17",
+    "@types/node-fetch": "^2.6.12",
     "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.7.1"
   }
 }

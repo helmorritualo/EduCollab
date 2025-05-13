@@ -10,6 +10,21 @@ export type User = {
   is_active: boolean;
 };
 
+export interface Subscription {
+  id?: number;
+  user_id: number;
+  subscription_id: string;
+  status: string;
+  plan_id: string;
+  start_date?: Date;
+  next_billing_date?: Date;
+  payment_id?: string;
+  payer_id?: string;
+  amount: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 export type Group = {
   group_id: number;
   name: string;

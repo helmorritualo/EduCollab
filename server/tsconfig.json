@@ -12,15 +12,19 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
 
+    /* Module Settings */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
     /* Paths */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
 
-    /* Bundling */
-    "moduleResolution": "Bundler",
-    "outDir": "./dist"
+    /* Emit */
+    "outDir": "./dist",
+    "sourceMap": true
   },
   "include": ["**/*.ts", ".eslintrc.json"],
   "exclude": ["./node_modules", "./dist", "vitest.config.ts"]

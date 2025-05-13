@@ -12,7 +12,8 @@ import {
   ClipboardList,
   Users,
   Ellipsis,
-  Files
+  Files,
+  CreditCard
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -26,11 +27,13 @@ const MainLayout = () => {
     { name: "Tasks", href: "/tasks", icon: ClipboardList },
     { name: "Progress", href: "/progress", icon: Ellipsis },
     { name: "Groups", href: "/groups", icon: Users },
+    { name: "Subscription", href: "/subscription", icon: CreditCard },
   ];
 
   const teacherNavigation = [
     { name: "Tasks", href: "/teacher/tasks", icon: ClipboardList },
     { name: "Groups", href: "/teacher/groups", icon: Users },
+    { name: "Subscription", href: "/subscription", icon: CreditCard },
   ];
 
   const adminNavigation = [
@@ -39,6 +42,7 @@ const MainLayout = () => {
     { name: "Files", href: "/admin/files", icon: Files },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Groups", href: "/admin/groups", icon: Users },
+    { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
   ];
 
   const isActive = (path: string) => location.pathname === path;

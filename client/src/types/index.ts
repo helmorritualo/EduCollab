@@ -45,6 +45,26 @@ export interface GroupWithMembers extends Group {
   members: GroupMember[];
 }
 
+export interface Subscription {
+  id?: number;
+  user_id: number;
+  subscription_id: string;
+  status: string;
+  plan_id: string;
+  start_date?: Date | string;
+  next_billing_date?: Date | string;
+  payment_id?: string;
+  payer_id?: string;
+  amount: number;
+  created_at?: Date | string;
+  updated_at?: Date | string;
+  // For admin view - joined with user data
+  username?: string;
+  full_name?: string;
+  email?: string;
+  role?: string;
+}
+
 export interface TeacherInvitation {
   invitation_id: number;
   group_id: number;

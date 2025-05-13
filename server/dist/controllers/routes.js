@@ -6,16 +6,13 @@ import { teacherGroupInvitationRoutes } from "./teacherGroupInvitation/route";
 import taskRoutes from "./task/route";
 import fileUploadRoutes from "./fileUpload/route";
 import subscriptionRoutes from "./subscription.routes";
-
 export const routes = [
-  authRoutes,
-  userRoutes,
-  groupRoutes,
-  groupMemberRoutes,
-  teacherGroupInvitationRoutes,
-  taskRoutes,
-  fileUploadRoutes,
-  subscriptionRoutes
-] as const;
-
-export type AppRoutes = (typeof routes)[number];
+    authRoutes,
+    userRoutes,
+    groupRoutes,
+    groupMemberRoutes,
+    teacherGroupInvitationRoutes,
+    taskRoutes,
+    fileUploadRoutes,
+    subscriptionRoutes
+];

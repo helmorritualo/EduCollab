@@ -27,11 +27,16 @@ interface ApiResponse<T> {
   tasks?: T extends { tasks: TaskWithDetails[] } ? TaskWithDetails[] : never;
 }
 
-const api = axios.create({
-  baseURL: "http://localhost:5000",
+// Use environment variable or fallback to default
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+export const api = axios.create({
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  // Add timeout to prevent indefinite waiting
+  timeout: 10000, // 10 seconds
 });
 
 // Request interceptor for adding the token to the headers for all requests
@@ -140,6 +145,9 @@ api.interceptors.response.use(
     return Promise.reject(new Error(errorMessage));
   }
 );
+
+// Export the subscription API from a separate file
+export { subscriptionAPI } from './subscription.service';
 
 export const profileAPI = {
   getUserProfile: async () => {
@@ -499,6 +507,8 @@ export const fileAPI = {
     }
   }
 };
+
+// subscriptionAPI is now imported from subscription.service.ts
 
 export const taskAPI = {
   getTaskById: async (taskId: number): Promise<TaskWithDetails> => {

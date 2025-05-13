@@ -136,3 +136,25 @@ CREATE TABLE task_assignments (
 CREATE INDEX idx_task_assignments_task_id ON task_assignments(task_id);
 CREATE INDEX idx_task_assignments_user_id ON task_assignments(user_id);
 CREATE INDEX idx_task_assignments_status ON task_assignments(status);
+
+-- Create Subscriptions table
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  subscription_id VARCHAR(255) NOT NULL,
+  status VARCHAR(50) NOT NULL,
+  plan_id VARCHAR(255) NOT NULL,
+  start_date DATETIME,
+  next_billing_date DATETIME,
+  payment_id VARCHAR(255),
+  payer_id VARCHAR(255),
+  amount DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  UNIQUE KEY (subscription_id)
+);
+
+-- Add indexes for performance
+CREATE INDEX idx_subscription_user_id ON subscriptions(user_id);
+CREATE INDEX idx_subscription_status ON subscriptions(status);

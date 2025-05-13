@@ -36,7 +36,13 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminTasks = lazy(() => import("./pages/admin/AdminTasks"));
 const AdminGroups = lazy(() => import("./pages/admin/AdminGroups"));
 const AdminFiles = lazy(() => import("./pages/admin/AdminFiles"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/SubscriptionManagement"));
 const PrivateRoute = lazy(() => import("./components/PrivateRoute"));
+
+// Subscription Pages
+const SubscriptionPage = lazy(() => import("./pages/subscription/SubscriptionPage"));
+const SubscriptionSuccessPage = lazy(() => import("./pages/subscription/SubscriptionSuccessPage"));
+const SubscriptionCancelPage = lazy(() => import("./pages/subscription/SubscriptionCancelPage"));
 
 // Shared
 const GroupDetails = lazy(() => import("./pages/groups/GroupDetails"));
@@ -98,7 +104,13 @@ function App() {
                     <Route path="users" element={<AdminUsers />} />
                     <Route path="groups" element={<AdminGroups />} />
                     <Route path="groups/:groupId" element={<GroupDetails />} />
+                    <Route path="subscriptions" element={<AdminSubscriptions />} />
                   </Route>
+
+                  {/* Subscription Routes */}
+                  <Route path="subscription" element={<SubscriptionPage />} />
+                  <Route path="payment/success" element={<SubscriptionSuccessPage />} />
+                  <Route path="payment/cancel" element={<SubscriptionCancelPage />} />
                 </Route>
               </Route>
 
